@@ -716,10 +716,14 @@ async def cash_out(cash_out_data: dict, current_user: User = Depends(get_current
     except Exception as e:
         logger.error(f"Cash out error: {str(e)}")
         raise HTTPException(status_code=500, detail="Error processing cash out")
+@api_router.post("/register-business")
 async def register_business(business_data: dict, current_user: User = Depends(get_current_user)):
     """Register a business"""
     # Create Moov business account if needed
     moov_business_id = await create_moov_business_account(business_data, current_user)
+    
+    # Generate unique API key for this business
+    business_api_key = f"dp_{uuid.uuid4().hex[:16]}"
     
     business = Business(
         name=business_data["name"],
@@ -736,12 +740,18 @@ async def register_business(business_data: dict, current_user: User = Depends(ge
     # Generate QR code for business
     business.qr_code = f"dalepay://pay/{business.id}"
     
-    result = await db.businesses.insert_one(business.dict())
+    # Add business data to dict and include API key
+    business_dict = business.dict()
+    business_dict["api_key"] = business_api_key
+    business_dict["api_created_at"] = datetime.utcnow()
+    
+    result = await db.businesses.insert_one(business_dict)
     
     return {
         "message": "Business registered successfully", 
         "business_id": business.id,
-        "business": business.dict()
+        "business": business_dict,
+        "api_key": business_api_key
     }
 
 async def create_moov_business_account(business_data: dict, user: User) -> str:
