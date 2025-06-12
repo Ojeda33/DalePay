@@ -16,6 +16,7 @@ import AdminDashboard from './components/AdminDashboard';
 import UserSettings from './components/UserSettings';
 import TermsConditions from './components/TermsConditions';
 import JorgeTourGuide from './components/JorgeTourGuide';
+import AppSecurity from './components/AppSecurity';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
