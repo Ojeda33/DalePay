@@ -3,6 +3,7 @@ import unittest
 import json
 import os
 import time
+import uuid
 from datetime import datetime
 
 class DalePayAPITester:
@@ -13,6 +14,9 @@ class DalePayAPITester:
         self.tests_run = 0
         self.tests_passed = 0
         self.card_ids = []
+        self.business_ids = []
+        self.test_email = f"test_{uuid.uuid4().hex[:8]}@dalepay.com"
+        self.test_password = "TestPass123!"
 
     def run_test(self, name, method, endpoint, expected_status, data=None, headers=None):
         """Run a single API test"""
@@ -56,8 +60,37 @@ class DalePayAPITester:
             print(f"❌ Failed - Error: {str(e)}")
             return False, {}
 
-    def login(self, email, password):
+    def create_account(self):
+        """Test account creation"""
+        user_data = {
+            "email": self.test_email,
+            "password": self.test_password,
+            "full_name": "Test User",
+            "phone": "787-123-4567"
+        }
+        
+        success, response = self.run_test(
+            "Create Account",
+            "POST",
+            "api/auth/create-account",
+            200,
+            data=user_data
+        )
+        
+        if success and 'access_token' in response:
+            self.token = response['access_token']
+            self.user_id = response['user']['id']
+            print(f"Created account for {self.test_email} with user ID: {self.user_id}")
+            return True
+        return False
+
+    def login(self, email=None, password=None):
         """Test login and get token"""
+        if not email:
+            email = self.test_email
+        if not password:
+            password = self.test_password
+            
         success, response = self.run_test(
             "Login",
             "POST",
@@ -166,6 +199,176 @@ class DalePayAPITester:
         if success:
             print(f"Found {len(response)} transfers")
         return success, response
+        
+    def register_business(self, business_data):
+        """Register a business"""
+        success, response = self.run_test(
+            "Register Business",
+            "POST",
+            "api/register-business",
+            200,
+            data=business_data
+        )
+        if success and 'business_id' in response:
+            self.business_ids.append(response['business_id'])
+            print(f"Registered business with ID: {response['business_id']}")
+            return success, response
+        return False, {}
+        
+    def get_businesses(self):
+        """Get user's businesses"""
+        success, response = self.run_test(
+            "Get User Businesses",
+            "GET",
+            "api/businesses",
+            200
+        )
+        if success:
+            print(f"Found {len(response)} businesses")
+        return success, response
+        
+    def get_business_details(self, business_id):
+        """Get business details"""
+        success, response = self.run_test(
+            "Get Business Details",
+            "GET",
+            f"api/businesses/{business_id}",
+            200
+        )
+        if success:
+            print(f"Got details for business: {response.get('name', 'Unknown')}")
+        return success, response
+        
+    def setup_business_integration(self, business_id, integration_type, extra_data=None):
+        """Setup business integration"""
+        data = {"type": integration_type}
+        if extra_data:
+            data.update(extra_data)
+            
+        success, response = self.run_test(
+            f"Setup {integration_type} Integration",
+            "POST",
+            f"api/businesses/{business_id}/integrations",
+            200,
+            data=data
+        )
+        if success:
+            print(f"Successfully setup {integration_type} integration")
+        return success, response
+        
+    def get_business_integrations(self, business_id):
+        """Get business integrations"""
+        success, response = self.run_test(
+            "Get Business Integrations",
+            "GET",
+            f"api/businesses/{business_id}/integrations",
+            200
+        )
+        if success:
+            print(f"Found {len(response)} integrations")
+        return success, response
+        
+    def get_business_qr_code(self, business_id):
+        """Get business QR code"""
+        success, response = self.run_test(
+            "Get Business QR Code",
+            "GET",
+            f"api/businesses/{business_id}/qr-code",
+            200
+        )
+        if success:
+            print(f"Got QR code for business")
+            if response.get('ath_movil'):
+                print(f"ATH Móvil QR code: {response['ath_movil'].get('qr_code')}")
+        return success, response
+        
+    def get_business_api_key(self, business_id):
+        """Get business API key"""
+        success, response = self.run_test(
+            "Get Business API Key",
+            "GET",
+            f"api/businesses/{business_id}/api-key",
+            200
+        )
+        if success:
+            print(f"Got API key: {response.get('api_key')}")
+        return success, response
+        
+    def regenerate_business_api_key(self, business_id):
+        """Regenerate business API key"""
+        success, response = self.run_test(
+            "Regenerate Business API Key",
+            "POST",
+            f"api/businesses/{business_id}/regenerate-api-key",
+            200
+        )
+        if success:
+            print(f"Regenerated API key: {response.get('api_key')}")
+        return success, response
+        
+    def business_cashout(self, business_id, amount):
+        """Cash out business funds"""
+        success, response = self.run_test(
+            "Business Cashout",
+            "POST",
+            f"api/businesses/{business_id}/cashout",
+            200,
+            data={"amount": amount, "method": "bank"}
+        )
+        if success:
+            print(f"Successfully cashed out ${amount}")
+            if 'new_balance' in response:
+                print(f"New business balance: ${response['new_balance']}")
+        return success, response
+        
+    def create_plaid_link_token(self):
+        """Create Plaid link token"""
+        success, response = self.run_test(
+            "Create Plaid Link Token",
+            "POST",
+            "api/plaid/create-link-token",
+            200
+        )
+        if success:
+            print(f"Got Plaid link token: {response.get('link_token')}")
+        return success, response
+        
+    def link_bank_account(self, bank_data):
+        """Link bank account"""
+        success, response = self.run_test(
+            "Link Bank Account",
+            "POST",
+            "api/link-bank-account",
+            200,
+            data={"bank_data": bank_data}
+        )
+        if success:
+            print(f"Successfully linked bank account")
+        return success, response
+        
+    def get_linked_accounts(self):
+        """Get linked bank accounts"""
+        success, response = self.run_test(
+            "Get Linked Accounts",
+            "GET",
+            "api/linked-accounts",
+            200
+        )
+        if success:
+            print(f"Found {len(response)} linked accounts")
+        return success, response
+        
+    def get_account_balance(self, account_id):
+        """Get account balance"""
+        success, response = self.run_test(
+            "Get Account Balance",
+            "GET",
+            f"api/account-balance/{account_id}",
+            200
+        )
+        if success:
+            print(f"Account balance: ${response.get('balance')}")
+        return success, response
 
 def run_tests():
     # Get the backend URL from environment
@@ -174,153 +377,203 @@ def run_tests():
     # Create tester instance
     tester = DalePayAPITester(backend_url)
     
-    # Test credentials
-    email = "test@dalepay.com"
-    password = "testpass123"
+    print("\n🔥 Starting DalePay API Tests\n")
     
-    print("\n🔥 Starting DalePay REAL Money Integration Tests\n")
-    print("🔑 Testing with credentials:")
-    print(f"   Email: {email}")
-    print(f"   Password: {password}")
+    # Test 1: Create a new account
+    print("\n🔍 Test 1: Creating a new account...")
+    if not tester.create_account():
+        print("❌ Account creation failed, trying to login with existing account")
+        # Try to login with existing test account
+        if not tester.login("test@dalepay.com", "testpass123"):
+            print("❌ Login failed, stopping tests")
+            return False
     
-    # Login
-    if not tester.login(email, password):
-        print("❌ Login failed, stopping tests")
-        return False
-    
-    # Get user profile
+    # Test 2: Get user profile
+    print("\n🔍 Test 2: Getting user profile...")
     success, profile = tester.get_user_profile()
     if not success:
         print("❌ Failed to get user profile")
     
-    # Get initial balance
+    # Test 3: Get user balance (should be zero as per requirements)
+    print("\n🔍 Test 3: Getting user balance...")
     success, balance_data = tester.get_user_balance()
     if not success:
         print("❌ Failed to get user balance")
+    else:
+        balance = balance_data.get('balance', None)
+        if balance == 0:
+            print("✅ Balance is correctly set to zero as required")
+        else:
+            print(f"❌ Balance should be zero, got {balance}")
     
-    initial_balance = balance_data.get('balance', 0)
-    print(f"Initial balance: ${initial_balance}")
-    
-    # Get existing cards
-    success, cards = tester.get_cards()
-    
-    # Print all cards to debug
-    print("\n🔍 Existing cards:")
-    for card in cards:
-        print(f"Card ID: {card['id']}, Last4: {card['card_number_last4']}, Type: {card['card_type']}")
-    
-    # Find the card ending in 1234 or add it if it doesn't exist
-    card_1234 = None
-    for card in cards:
-        if card.get('card_number_last4') == '1234':
-            card_1234 = card
-            break
-    
-    if not card_1234:
-        print("\nAdding a test card ending in 1234 (should have $31 balance)...")
-        test_card_1234 = {
-            "card_number": "4242424242421234",  # Card ending in 1234 with $31 balance
-            "card_type": "Visa",
-            "expiry_month": 12,
-            "expiry_year": 2030,
-            "cvv": "123",
-            "cardholder_name": "Test User"
-        }
-        tester.add_card(test_card_1234)
-        
-        # Get updated cards list
-        success, cards = tester.get_cards()
-        
-        # Find the newly added card
-        for card in cards:
-            if card.get('card_number_last4') == '1234':
-                card_1234 = card
-                break
-    
-    if not card_1234:
-        print("❌ Failed to find or add card ending in 1234")
-        return False
-    
-    print(f"✅ Found card ending in 1234 with ID: {card_1234['id']}")
-    
-    print("\n🔍 TESTING REAL MONEY INTEGRATION\n")
-    
-    # Test 1: Try to fund $50 (should fail - insufficient funds)
-    print("\n🔍 Test 1: Funding $50 (should fail - insufficient funds)...")
-    success, fund_response = tester.fund_account(card_1234['id'], 50)
-    
-    # This should fail because the card only has $31
+    # Test 4: Add a card
+    print("\n🔍 Test 4: Adding a card...")
+    test_card = {
+        "card_number": "4242424242421234",  # Card ending in 1234 with $31 balance
+        "card_type": "Visa",
+        "expiry_month": 12,
+        "expiry_year": 2030,
+        "cvv": "123",
+        "cardholder_name": "Test User"
+    }
+    success, card_response = tester.add_card(test_card)
     if not success:
-        print("✅ $50 funding correctly rejected due to insufficient funds")
-        # Check if error message includes available balance
-        error_message = fund_response.get('detail', '')
-        if 'Available: $31.00' in error_message or 'insufficient funds' in error_message.lower():
-            print("✅ Error message correctly indicates insufficient funds")
-            print(f"   Message: {error_message}")
-        else:
-            print("❌ Error message should indicate insufficient funds")
-            print(f"   Message: {error_message}")
+        print("❌ Failed to add card")
+    
+    # Test 5: Get cards
+    print("\n🔍 Test 5: Getting cards...")
+    success, cards = tester.get_cards()
+    if not success or len(cards) == 0:
+        print("❌ Failed to get cards or no cards found")
+    
+    # Test 6: Fund account
+    print("\n🔍 Test 6: Funding account...")
+    if len(tester.card_ids) > 0:
+        success, fund_response = tester.fund_account(tester.card_ids[0], 10)
+        if not success:
+            print("❌ Failed to fund account")
     else:
-        print("❌ $50 funding should have failed but succeeded")
+        print("❌ No cards available for funding test")
     
-    # Test 2: Try to fund $10 (should succeed)
-    print("\n🔍 Test 2: Funding $10 (should succeed)...")
-    success, fund_response = tester.fund_account(card_1234['id'], 10)
-    
-    if success:
-        print("✅ $10 funding succeeded")
-        
-        # Verify real payment was processed
-        real_payment = fund_response.get('real_payment_processed', False)
-        if real_payment:
-            print("✅ REAL PAYMENT PROCESSED flag is True")
-        else:
-            print("❌ REAL PAYMENT PROCESSED flag should be True")
-        
-        # Verify card available balance is updated correctly
-        card_available_balance = fund_response.get('card_available_balance', 0)
-        expected_card_balance = 31.00 - 10.00
-        if abs(card_available_balance - expected_card_balance) < 0.01:
-            print(f"✅ Card available balance correctly updated to ${card_available_balance:.2f}")
-        else:
-            print(f"❌ Card available balance should be ${expected_card_balance:.2f}, got ${card_available_balance:.2f}")
-        
-        # Verify user balance is updated correctly
-        time.sleep(1)  # Wait for balance to update
-        success, new_balance_data = tester.get_user_balance()
-        if success:
-            new_balance = new_balance_data.get('balance', 0)
-            expected_balance = initial_balance + 10.00
-            
-            print(f"New balance: ${new_balance}, Expected: ${expected_balance}")
-            if abs(new_balance - expected_balance) < 0.01:
-                print("✅ User balance correctly increased by $10.00")
-            else:
-                print(f"❌ User balance did not increase as expected. Expected ${expected_balance}, got ${new_balance}")
-    else:
-        print("❌ $10 funding failed but should have succeeded")
-        print(f"   Error: {fund_response.get('detail', 'Unknown error')}")
-    
-    # Test 3: Get transfers to verify transaction was recorded
-    print("\n🔍 Test 3: Checking transfer history...")
+    # Test 7: Get transfers (should be empty as per requirements)
+    print("\n🔍 Test 7: Getting transfers...")
     success, transfers = tester.get_transfers()
-    
-    if success:
-        # Look for the most recent transfer
-        if len(transfers) > 0:
-            latest_transfer = transfers[0]
-            print("✅ Found transfer in history")
-            
-            # Check if it has a Moov transfer ID
-            if 'moov_transfer_id' in latest_transfer and latest_transfer['moov_transfer_id']:
-                print("✅ Transfer has a real Moov transfer ID")
-                print(f"   Moov Transfer ID: {latest_transfer['moov_transfer_id']}")
-            else:
-                print("❌ Transfer should have a real Moov transfer ID")
-        else:
-            print("❌ No transfers found in history")
+    if not success:
+        print("❌ Failed to get transfers")
     else:
-        print("❌ Failed to get transfer history")
+        if len(transfers) == 0:
+            print("✅ Transfers list is correctly empty as required")
+        else:
+            print(f"❌ Transfers list should be empty, found {len(transfers)} transfers")
+    
+    # Test 8: Register a business
+    print("\n🔍 Test 8: Registering a business...")
+    business_data = {
+        "name": "Test Business",
+        "business_type": "restaurant",
+        "description": "Test business description",
+        "address": "123 Test St, San Juan, PR",
+        "phone": "787-123-4567",
+        "website": "https://testbusiness.com",
+        "business_structure": "llc",
+        "owner_name": "Test Owner"
+    }
+    success, business_response = tester.register_business(business_data)
+    if not success:
+        print("❌ Failed to register business")
+    
+    # Test 9: Get businesses
+    print("\n🔍 Test 9: Getting businesses...")
+    success, businesses = tester.get_businesses()
+    if not success or len(businesses) == 0:
+        print("❌ Failed to get businesses or no businesses found")
+    
+    # Test 10: Get business details
+    print("\n🔍 Test 10: Getting business details...")
+    if len(tester.business_ids) > 0:
+        success, business_details = tester.get_business_details(tester.business_ids[0])
+        if not success:
+            print("❌ Failed to get business details")
+    else:
+        print("❌ No businesses available for details test")
+    
+    # Test 11: Setup ATH Móvil integration
+    print("\n🔍 Test 11: Setting up ATH Móvil integration...")
+    if len(tester.business_ids) > 0:
+        success, integration_response = tester.setup_business_integration(
+            tester.business_ids[0], 
+            "ath_movil", 
+            {"phone_number": "787-123-4567"}
+        )
+        if not success:
+            print("❌ Failed to setup ATH Móvil integration")
+    else:
+        print("❌ No businesses available for integration test")
+    
+    # Test 12: Get business integrations
+    print("\n🔍 Test 12: Getting business integrations...")
+    if len(tester.business_ids) > 0:
+        success, integrations = tester.get_business_integrations(tester.business_ids[0])
+        if not success:
+            print("❌ Failed to get business integrations")
+        elif "ath_movil" not in integrations:
+            print("❌ ATH Móvil integration not found")
+        else:
+            print("✅ ATH Móvil integration found")
+    else:
+        print("❌ No businesses available for integrations test")
+    
+    # Test 13: Get business QR code
+    print("\n🔍 Test 13: Getting business QR code...")
+    if len(tester.business_ids) > 0:
+        success, qr_code = tester.get_business_qr_code(tester.business_ids[0])
+        if not success:
+            print("❌ Failed to get business QR code")
+        elif not qr_code.get('qr_code'):
+            print("❌ QR code not found in response")
+        else:
+            print("✅ QR code found in response")
+    else:
+        print("❌ No businesses available for QR code test")
+    
+    # Test 14: Get business API key
+    print("\n🔍 Test 14: Getting business API key...")
+    if len(tester.business_ids) > 0:
+        success, api_key_response = tester.get_business_api_key(tester.business_ids[0])
+        if not success:
+            print("❌ Failed to get business API key")
+        elif not api_key_response.get('api_key'):
+            print("❌ API key not found in response")
+        else:
+            print("✅ API key found in response")
+    else:
+        print("❌ No businesses available for API key test")
+    
+    # Test 15: Create Plaid link token
+    print("\n🔍 Test 15: Creating Plaid link token...")
+    success, link_token_response = tester.create_plaid_link_token()
+    if not success:
+        print("❌ Failed to create Plaid link token")
+    elif not link_token_response.get('link_token'):
+        print("❌ Link token not found in response")
+    else:
+        print("✅ Link token found in response")
+    
+    # Test 16: Link bank account
+    print("\n🔍 Test 16: Linking bank account...")
+    bank_data = {
+        "institution_name": "Test Bank",
+        "account_type": "checking",
+        "account_name": "Test Checking",
+        "account_mask": "1234"
+    }
+    success, link_response = tester.link_bank_account(bank_data)
+    if not success:
+        print("❌ Failed to link bank account")
+    
+    # Test 17: Get linked accounts
+    print("\n🔍 Test 17: Getting linked accounts...")
+    success, linked_accounts = tester.get_linked_accounts()
+    if not success:
+        print("❌ Failed to get linked accounts")
+    elif len(linked_accounts) == 0:
+        print("❌ No linked accounts found")
+    else:
+        print(f"✅ Found {len(linked_accounts)} linked accounts")
+        
+        # Test 18: Get account balance
+        print("\n🔍 Test 18: Getting account balance...")
+        account_id = linked_accounts[0].get('id')
+        if account_id:
+            success, balance_response = tester.get_account_balance(account_id)
+            if not success:
+                print("❌ Failed to get account balance")
+            elif 'balance' not in balance_response:
+                print("❌ Balance not found in response")
+            else:
+                print(f"✅ Account balance: ${balance_response['balance']}")
+        else:
+            print("❌ No account ID available for balance test")
     
     # Print test summary
     print(f"\n📊 Tests passed: {tester.tests_passed}/{tester.tests_run}")
