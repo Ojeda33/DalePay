@@ -37,10 +37,29 @@ const UserSettings = ({ user, onLogout, onBack, onNavigate }) => {
     <div className="space-y-6">
       <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
         <div className="text-center mb-6">
-          <div className="w-20 h-20 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full mx-auto mb-4 flex items-center justify-center">
-            <span className="text-white text-2xl font-bold">
-              {user?.full_name?.charAt(0) || 'U'}
-            </span>
+          <div className="relative inline-block">
+            <div className="w-24 h-24 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full mx-auto mb-4 flex items-center justify-center overflow-hidden">
+              {userImage ? (
+                <img src={userImage} alt="Profile" className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-white text-3xl font-bold">
+                  {user?.full_name?.charAt(0) || 'U'}
+                </span>
+              )}
+            </div>
+            <button 
+              onClick={() => document.getElementById('imageUpload').click()}
+              className="absolute bottom-0 right-0 bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm hover:bg-blue-700"
+            >
+              📷
+            </button>
+            <input
+              id="imageUpload"
+              type="file"
+              accept="image/*"
+              onChange={handleImageUpload}
+              className="hidden"
+            />
           </div>
           <h3 className="text-xl font-bold text-gray-800">{user?.full_name}</h3>
           <p className="text-gray-600">{user?.email}</p>
@@ -52,10 +71,18 @@ const UserSettings = ({ user, onLogout, onBack, onNavigate }) => {
         <div className="space-y-4">
           <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
             <div>
+              <p className="font-medium text-gray-800">Nombre completo</p>
+              <p className="text-sm text-gray-600">{user?.full_name}</p>
+            </div>
+            <button className="text-blue-600 text-sm font-medium">Editar</button>
+          </div>
+
+          <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+            <div>
               <p className="font-medium text-gray-800">Email</p>
               <p className="text-sm text-gray-600">{user?.email}</p>
             </div>
-            <button className="text-blue-600 text-sm font-medium">Editar</button>
+            <button className="text-blue-600 text-sm font-medium">Cambiar</button>
           </div>
 
           <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
@@ -64,8 +91,24 @@ const UserSettings = ({ user, onLogout, onBack, onNavigate }) => {
               <p className="text-sm text-gray-600">{user?.phone || 'No agregado'}</p>
             </div>
             <button className="text-blue-600 text-sm font-medium">
-              {user?.phone ? 'Editar' : 'Agregar'}
+              {user?.phone ? 'Cambiar' : 'Agregar'}
             </button>
+          </div>
+
+          <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+            <div>
+              <p className="font-medium text-gray-800">Dirección</p>
+              <p className="text-sm text-gray-600">No agregada</p>
+            </div>
+            <button className="text-blue-600 text-sm font-medium">Agregar</button>
+          </div>
+
+          <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+            <div>
+              <p className="font-medium text-gray-800">Fecha de nacimiento</p>
+              <p className="text-sm text-gray-600">No agregada</p>
+            </div>
+            <button className="text-blue-600 text-sm font-medium">Agregar</button>
           </div>
 
           <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
@@ -78,6 +121,28 @@ const UserSettings = ({ user, onLogout, onBack, onNavigate }) => {
             <div className="text-green-600 text-sm">✅ Activo</div>
           </div>
         </div>
+      </div>
+
+      {/* Account Verification */}
+      <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
+        <h4 className="font-medium text-blue-800 mb-3">Verificación de Cuenta</h4>
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-blue-700 text-sm">Email verificado</span>
+            <span className="text-green-600 text-sm">✅</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-blue-700 text-sm">Teléfono verificado</span>
+            <span className="text-yellow-600 text-sm">⏳ Pendiente</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-blue-700 text-sm">Identidad verificada</span>
+            <span className="text-red-600 text-sm">❌ No verificado</span>
+          </div>
+        </div>
+        <button className="w-full mt-3 bg-blue-600 text-white py-2 rounded-lg text-sm font-medium">
+          Verificar identidad
+        </button>
       </div>
     </div>
   );
