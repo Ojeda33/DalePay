@@ -54,36 +54,12 @@ function App() {
   // Check for notifications (only show when actually needed)
   useEffect(() => {
     if (isAuthenticated && user) {
-      checkForNotifications();
+      // Notification checking is now handled by NotificationSystem component
     }
   }, [isAuthenticated, user]);
 
-  const checkForNotifications = async () => {
-    try {
-      // Only set notifications when there are actual pending items
-      const notifications = {
-        home: false,
-        dashboard: false, // Only show if balance is low or new features
-        send: false,
-        receive: false, // Only show if pending payment requests
-        crypto: false, // Only show if price alerts
-        settings: false // Only show if account needs verification
-      };
-
-      // Check for low balance
-      if (user?.balance < 10) {
-        notifications.dashboard = true;
-      }
-
-      // Check for unverified account
-      if (!user?.phone || !user?.is_verified) {
-        notifications.settings = true;
-      }
-
-      setHasNotifications(notifications);
-    } catch (error) {
-      console.error('Error checking notifications:', error);
-    }
+  const handleNotificationsUpdate = (notifications) => {
+    setHasNotifications(notifications);
   };
 
   useEffect(() => {
