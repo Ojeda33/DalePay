@@ -189,12 +189,15 @@ const BusinessDashboard = ({ business, user, onBack }) => {
       <div className="grid grid-cols-2 gap-4">
         <button 
           onClick={() => setShowCashout(true)}
-          className="bg-green-500 text-white py-4 rounded-xl font-bold flex items-center justify-center space-x-2"
+          className="bg-green-500 text-white py-4 rounded-xl font-bold flex items-center justify-center space-x-2 hover:bg-green-600 transition-colors"
         >
           <span>💸</span>
           <span>Retirar Fondos</span>
         </button>
-        <button className="bg-blue-500 text-white py-4 rounded-xl font-bold flex items-center justify-center space-x-2">
+        <button 
+          onClick={() => setActiveTab('qr-code')}
+          className="bg-blue-500 text-white py-4 rounded-xl font-bold flex items-center justify-center space-x-2 hover:bg-blue-600 transition-colors"
+        >
           <span>📱</span>
           <span>Código QR</span>
         </button>
