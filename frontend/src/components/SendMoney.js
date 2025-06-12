@@ -151,7 +151,7 @@ const SendMoney = ({ user, onBack }) => {
       </div>
 
       <div className="text-center">
-        <div className="relative">
+        <div className="relative amount-input">
           <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-2xl text-gray-600">$</span>
           <input
             type="text"
@@ -170,7 +170,7 @@ const SendMoney = ({ user, onBack }) => {
         )}
       </div>
 
-      <div className="grid grid-cols-5 gap-2">
+      <div className="grid grid-cols-5 gap-2 quick-amounts">
         {quickAmounts.map((quickAmount) => (
           <button
             key={quickAmount}
