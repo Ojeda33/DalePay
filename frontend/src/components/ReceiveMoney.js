@@ -7,6 +7,7 @@ const ReceiveMoney = ({ user, onBack }) => {
   const [requestAmount, setRequestAmount] = useState('');
   const [requestDescription, setRequestDescription] = useState('');
   const [shareMethod, setShareMethod] = useState('');
+  const [showEnhancedQR, setShowEnhancedQR] = useState(false);
 
   const formatCurrency = (value) => {
     const num = parseFloat(value) || 0;
