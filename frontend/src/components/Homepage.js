@@ -268,7 +268,7 @@ const Homepage = ({ onShowLogin }) => {
         </div>
       </section>
 
-      {/* Features Section */}
+      {/* Features Section with HD Images */}
       <section 
         id="features"
         ref={el => sectionsRef.current.features = el}
@@ -287,14 +287,94 @@ const Homepage = ({ onShowLogin }) => {
             </p>
           </div>
 
+          {/* Feature Cards with Real Images */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-16">
+            <div className={`flex items-center space-x-6 transition-all duration-1000 ${
+              isVisible.features ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-10'
+            }`}>
+              <div className="w-64 h-48 rounded-2xl overflow-hidden shadow-xl">
+                <img 
+                  src="https://images.pexels.com/photos/7007191/pexels-photo-7007191.jpeg"
+                  alt="Happy woman using DalePay"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div>
+                <h3 className="text-3xl font-bold text-gray-800 mb-3">💸 Transferencias Reales</h3>
+                <p className="text-gray-600 text-lg leading-relaxed">
+                  Envía dinero real instantáneamente a cualquier usuario DalePay™ en Puerto Rico y el mundo.
+                  Sin esperas, sin complicaciones.
+                </p>
+              </div>
+            </div>
+
+            <div className={`flex items-center space-x-6 transition-all duration-1000 ${
+              isVisible.features ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-10'
+            }`}>
+              <div>
+                <h3 className="text-3xl font-bold text-gray-800 mb-3">💳 Wallet Digital Completo</h3>
+                <p className="text-gray-600 text-lg leading-relaxed">
+                  Tu billetera digital con tecnología Moov licenciada y protegida por FDIC.
+                  Máxima seguridad garantizada.
+                </p>
+              </div>
+              <div className="w-64 h-48 rounded-2xl overflow-hidden shadow-xl">
+                <img 
+                  src="https://images.pexels.com/photos/8938730/pexels-photo-8938730.jpeg"
+                  alt="Woman using mobile wallet"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            </div>
+
+            <div className={`flex items-center space-x-6 transition-all duration-1000 ${
+              isVisible.features ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-10'
+            }`}>
+              <div className="w-64 h-48 rounded-2xl overflow-hidden shadow-xl">
+                <img 
+                  src="https://images.unsplash.com/photo-1658480023495-dc8cae9e781e?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1Nzh8MHwxfHNlYXJjaHwzfHxoYXBweSUyMG1vYmlsZSUyMHBheW1lbnR8ZW58MHx8fHwxNzQ5Njk4ODk2fDA&ixlib=rb-4.1.0&q=85"
+                  alt="Man making mobile payment"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div>
+                <h3 className="text-3xl font-bold text-gray-800 mb-3">🏪 Pagos de Negocio</h3>
+                <p className="text-gray-600 text-lg leading-relaxed">
+                  Paga en DoorDash, Uber Eats, ATH Móvil y miles de negocios locales.
+                  Todo en una sola app.
+                </p>
+              </div>
+            </div>
+
+            <div className={`flex items-center space-x-6 transition-all duration-1000 ${
+              isVisible.features ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-10'
+            }`}>
+              <div>
+                <h3 className="text-3xl font-bold text-gray-800 mb-3">₿ Crypto Integrado</h3>
+                <p className="text-gray-600 text-lg leading-relaxed">
+                  Bitcoin, Ethereum, USDC y más con precios en tiempo real.
+                  El futuro del dinero, hoy.
+                </p>
+              </div>
+              <div className="w-64 h-48 rounded-2xl overflow-hidden shadow-xl">
+                <img 
+                  src="https://images.unsplash.com/photo-1645226880663-81561dcab0ae?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2Nzh8MHwxfHNlYXJjaHwyfHxzbWFydHBob25lJTIwZmluYW5jZXxlbnwwfHx8fDE3NDk2OTg4OTF8MA&ixlib=rb-4.1.0&q=85"
+                  alt="Person using financial app"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Traditional Feature Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {features.map((feature, index) => (
+            {features.slice(4).map((feature, index) => (
               <div 
-                key={index}
+                key={index + 4}
                 className={`bg-gradient-to-br from-blue-50 to-purple-50 rounded-3xl p-8 text-center hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-3 border border-blue-100 ${
                   isVisible.features ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
                 }`}
-                style={{ transitionDelay: `${index * 100}ms` }}
+                style={{ transitionDelay: `${(index + 4) * 100}ms` }}
               >
                 <div className="text-6xl mb-6 transform hover:scale-110 transition-transform duration-300">
                   {feature.icon}
