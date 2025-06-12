@@ -306,7 +306,13 @@ const BusinessPortal = ({ user, onBack }) => {
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
-                    <button className="bg-blue-50 text-blue-600 py-2 px-4 rounded-lg font-medium text-sm">
+                    <button 
+                      onClick={() => {
+                        setSelectedBusiness(business);
+                        setShowBusinessDashboard(true);
+                      }}
+                      className="bg-blue-50 text-blue-600 py-2 px-4 rounded-lg font-medium text-sm"
+                    >
                       📊 Dashboard
                     </button>
                     <button className="bg-purple-50 text-purple-600 py-2 px-4 rounded-lg font-medium text-sm">
