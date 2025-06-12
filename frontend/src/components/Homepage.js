@@ -205,7 +205,7 @@ const Homepage = ({ onShowLogin }) => {
               Dale<span className="text-yellow-300">Pay</span>™
             </h1>
             <p className="text-3xl md:text-4xl mb-2 text-blue-100 animate-fade-in-up animation-delay-500">
-              El Cash App de Puerto Rico
+              La Cartera Digital de Puerto Rico
             </p>
             <p className="text-xl md:text-2xl text-blue-200 mb-8 animate-fade-in-up animation-delay-1000">
               100% Taíno • Licenciado • Seguro • Instantáneo
