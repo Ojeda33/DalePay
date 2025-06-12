@@ -388,7 +388,13 @@ const Homepage = ({ onShowLogin }) => {
                 style={{ transitionDelay: `${index * 100}ms` }}
               >
                 <div className="text-center mb-6">
-                  <div className="text-5xl mb-3">{testimonial.avatar}</div>
+                  <div className="w-16 h-16 rounded-full mx-auto mb-3 overflow-hidden border-4 border-white shadow-lg">
+                    <img 
+                      src={testimonial.avatar} 
+                      alt={testimonial.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
                   <div className="flex justify-center space-x-1 mb-2">
                     {[...Array(testimonial.rating)].map((_, i) => (
                       <span key={i} className="text-yellow-400 text-xl">⭐</span>
