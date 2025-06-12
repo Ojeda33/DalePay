@@ -43,14 +43,18 @@ const BusinessDashboard = ({ business, user, onBack }) => {
     }
   };
 
-  const setupIntegration = async (integrationType) => {
+  const setupIntegration = async (integrationType, extraData = {}) => {
     setLoading(true);
     try {
-      const response = await axios.post(`/businesses/${business.id}/integrations`, {
-        type: integrationType
-      });
+      const integrationData = {
+        type: integrationType,
+        ...extraData
+      };
+      
+      const response = await axios.post(`/businesses/${business.id}/integrations`, integrationData);
       
       await fetchIntegrations();
+      await fetchQRCode(); // Refresh QR codes after integration
       alert(`¡Integración con ${integrationType} configurada exitosamente!`);
     } catch (error) {
       console.error('Error setting up integration:', error);
