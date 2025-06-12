@@ -305,6 +305,112 @@ const BusinessDashboard = ({ business, user, onBack }) => {
     </div>
   );
 
+  // QR Code Tab
+  const QRCodeTab = () => (
+    <div className="space-y-6">
+      <div className="text-center">
+        <h3 className="text-xl font-bold text-gray-800 mb-2">Códigos QR de Pago</h3>
+        <p className="text-gray-600">Comparte estos códigos para recibir pagos</p>
+      </div>
+
+      {/* DalePay QR Code */}
+      <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
+        <div className="text-center">
+          <div className="flex items-center justify-center mb-4">
+            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+              <span className="text-2xl">💎</span>
+            </div>
+            <div>
+              <h4 className="font-bold text-gray-800">DalePay™</h4>
+              <p className="text-sm text-gray-600">Código QR principal</p>
+            </div>
+          </div>
+          
+          <div className="bg-gray-100 rounded-lg p-8 mb-4">
+            <div className="text-6xl">📱</div>
+            <p className="text-xs text-gray-500 mt-2">QR Code: {qrCodeData?.qr_code}</p>
+          </div>
+          
+          <button className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium w-full">
+            💾 Descargar QR
+          </button>
+        </div>
+      </div>
+
+      {/* ATH Móvil QR Code */}
+      {qrCodeData?.ath_movil && (
+        <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
+          <div className="text-center">
+            <div className="flex items-center justify-center mb-4">
+              <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center mr-3">
+                <span className="text-white font-bold">ATH</span>
+              </div>
+              <div>
+                <h4 className="font-bold text-gray-800">ATH Móvil</h4>
+                <p className="text-sm text-gray-600">{qrCodeData.ath_movil.phone_number}</p>
+              </div>
+            </div>
+            
+            <div className="bg-blue-50 rounded-lg p-8 mb-4">
+              <div className="text-6xl">💳</div>
+              <p className="text-xs text-blue-600 mt-2 font-medium">
+                ATH Móvil: {qrCodeData.ath_movil.phone_number}
+              </p>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-3">
+              <button className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium">
+                💾 Descargar
+              </button>
+              <button className="border border-blue-600 text-blue-600 px-4 py-2 rounded-lg font-medium">
+                📱 Compartir
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Integration Prompts */}
+      {!integrations.ath_movil && (
+        <div className="bg-blue-50 rounded-xl p-4">
+          <h4 className="font-medium text-blue-800 mb-2">¿Quieres activar ATH Móvil?</h4>
+          <p className="text-blue-700 text-sm mb-3">
+            Genera un código QR personalizado para recibir pagos por ATH Móvil
+          </p>
+          <button 
+            onClick={() => {
+              const phone = prompt("Ingresa tu número de ATH Móvil (ej: 787-123-4567):");
+              if (phone) {
+                setupIntegration('ath_movil', { phone_number: phone });
+              }
+            }}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium"
+          >
+            Activar ATH Móvil
+          </button>
+        </div>
+      )}
+
+      <div className="bg-gray-50 rounded-xl p-4">
+        <h4 className="font-medium text-gray-800 mb-2">Instrucciones de uso</h4>
+        <div className="space-y-2 text-sm text-gray-600">
+          <div className="flex items-start">
+            <span className="mr-2">1️⃣</span>
+            <span>Imprime o muestra el código QR en tu negocio</span>
+          </div>
+          <div className="flex items-start">
+            <span className="mr-2">2️⃣</span>
+            <span>Los clientes escanean el código con su app DalePay™ o ATH Móvil</span>
+          </div>
+          <div className="flex items-start">
+            <span className="mr-2">3️⃣</span>
+            <span>Recibe el pago instantáneamente en tu balance</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   // Settings Tab
   const SettingsTab = () => (
     <div className="space-y-6">
