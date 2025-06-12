@@ -624,6 +624,7 @@ const BusinessDashboard = ({ business, user, onBack }) => {
       {/* Tab Content */}
       {activeTab === 'overview' && <OverviewTab />}
       {activeTab === 'integrations' && <IntegrationsTab />}
+      {activeTab === 'qr-code' && <QRCodeTab />}
       {activeTab === 'settings' && <SettingsTab />}
     </div>
   );
