@@ -131,11 +131,16 @@ const CardProcessor = ({ user, onBack }) => {
     setLoading(true);
     try {
       const cardData = {
-        ...cardForm,
-        card_type: detectCardType(cardForm.card_number)
+        card_number: cardForm.card_number.replace(/\s/g, ''), // Remove spaces
+        card_type: detectCardType(cardForm.card_number),
+        expiry_month: parseInt(cardForm.expiry_month),
+        expiry_year: parseInt(cardForm.expiry_year),
+        cvv: cardForm.cvv,
+        cardholder_name: cardForm.cardholder_name,
+        billing_address: cardForm.billing_address
       };
 
-      await axios.post('/cards', cardData);
+      const response = await axios.post('/cards', cardData);
       
       setShowAddCard(false);
       setCardForm({
@@ -152,9 +157,14 @@ const CardProcessor = ({ user, onBack }) => {
           country: 'US'
         }
       });
-      fetchCards();
+      setError('');
+      await fetchCards();
+      
+      // Show success message
+      alert('¡Tarjeta agregada exitosamente!');
     } catch (error) {
-      setError(error.response?.data?.detail || 'Error agregando tarjeta');
+      console.error('Card addition error:', error);
+      setError(error.response?.data?.detail || 'Error agregando tarjeta. Verifica los datos e inténtalo de nuevo.');
     } finally {
       setLoading(false);
     }
