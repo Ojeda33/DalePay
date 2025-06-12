@@ -219,6 +219,26 @@ const UserSettings = ({ user, onLogout, onBack }) => {
               </div>
             </div>
           </button>
+
+          <button className="w-full text-left p-3 border border-gray-200 rounded-lg hover:bg-gray-50">
+            <div className="flex items-center space-x-3">
+              <span className="text-2xl">📋</span>
+              <div>
+                <p className="font-medium text-gray-800">Términos y Condiciones</p>
+                <p className="text-sm text-gray-600">Lee nuestros términos legales</p>
+              </div>
+            </div>
+          </button>
+
+          <button className="w-full text-left p-3 border border-gray-200 rounded-lg hover:bg-gray-50">
+            <div className="flex items-center space-x-3">
+              <span className="text-2xl">🇵🇷</span>
+              <div>
+                <p className="font-medium text-gray-800">Herencia Taína</p>
+                <p className="text-sm text-gray-600">Conoce nuestra historia y misión</p>
+              </div>
+            </div>
+          </button>
         </div>
       </div>
 
