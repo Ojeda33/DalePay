@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import QRCode from 'qrcode.react';
+import { QRCodeCanvas } from 'qrcode.react';
 
 const EnhancedQRCode = ({ user, paymentData, onClose }) => {
   const [qrStyle, setQRStyle] = useState('default');
