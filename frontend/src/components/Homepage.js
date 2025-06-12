@@ -228,11 +228,17 @@ const Homepage = ({ onShowLogin }) => {
           </div>
 
           <div className="space-y-4 md:space-y-0 md:space-x-6 md:flex md:justify-center animate-fade-in-up animation-delay-2000">
-            <button className="w-full md:w-auto bg-white text-blue-600 px-10 py-5 rounded-full text-xl font-bold hover:bg-blue-50 transition-all duration-300 shadow-2xl transform hover:scale-105">
+            <button 
+              onClick={() => setShowLogin(true)}
+              className="w-full md:w-auto bg-white text-blue-600 px-10 py-5 rounded-full text-xl font-bold hover:bg-blue-50 transition-all duration-300 shadow-2xl transform hover:scale-105"
+            >
               🇵🇷 Crear Cuenta Gratis
             </button>
-            <button className="w-full md:w-auto border-2 border-white text-white px-10 py-5 rounded-full text-xl font-bold hover:bg-white hover:text-blue-600 transition-all duration-300">
-              ▶️ Ver Demo
+            <button 
+              onClick={() => setShowLogin(true)}
+              className="w-full md:w-auto border-2 border-white text-white px-10 py-5 rounded-full text-xl font-bold hover:bg-white hover:text-blue-600 transition-all duration-300"
+            >
+              🔐 Iniciar Sesión
             </button>
           </div>
 
