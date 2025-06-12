@@ -196,15 +196,16 @@ const Homepage = ({ onShowLogin }) => {
 
         <div className="relative z-10 text-center px-4 max-w-6xl mx-auto">
           <div className="mb-8">
-            <div className="w-32 h-32 bg-white rounded-full mx-auto mb-6 flex items-center justify-center shadow-2xl transform hover:scale-110 transition-transform duration-500">
-              <span className="text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-red-600">
+            <div className="w-32 h-32 bg-white rounded-full mx-auto mb-6 flex items-center justify-center shadow-2xl transform hover:scale-110 transition-transform duration-500 relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-600 via-purple-600 to-red-600 opacity-20 animate-pulse"></div>
+              <span className="dalepay-logo-icon text-6xl relative z-10">
                 D
               </span>
             </div>
-            <h1 className="text-6xl md:text-8xl font-bold text-white mb-4 animate-fade-in-up">
-              Dale<span className="text-yellow-300">Pay</span>™
+            <h1 className="text-6xl md:text-8xl font-bold mb-4 animate-fade-in-up">
+              <span className="dalepay-logo">Dale</span><span className="text-yellow-300">Pay</span>™
             </h1>
-            <p className="text-3xl md:text-4xl mb-2 text-blue-100 animate-fade-in-up animation-delay-500">
+            <p className="text-3xl md:text-4xl mb-2 dalepay-subtitle animate-fade-in-up animation-delay-500">
               La Cartera Digital de Puerto Rico
             </p>
             <p className="text-xl md:text-2xl text-blue-200 mb-8 animate-fade-in-up animation-delay-1000">
