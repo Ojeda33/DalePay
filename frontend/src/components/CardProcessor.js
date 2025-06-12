@@ -616,6 +616,7 @@ const CardProcessor = ({ user, onBack, onBalanceUpdate }) => {
                         {card.card_type} •••• {card.card_number_last4}
                       </p>
                       <p className="text-sm text-gray-600">{card.cardholder_name}</p>
+                      <p className="text-sm text-green-600 font-medium">💰 Disponible: $5,000.00</p>
                     </div>
                     <div className="text-2xl">
                       {getCardIcon(card.card_type)}
