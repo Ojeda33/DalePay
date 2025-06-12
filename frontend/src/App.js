@@ -263,7 +263,7 @@ function App() {
       case 'receive':
         return <ReceiveMoney user={user} onBack={() => setCurrentPage('dashboard')} />;
       case 'cards':
-        return <CardProcessor user={user} onBack={() => setCurrentPage('dashboard')} onBalanceUpdate={checkAuthStatus} />;
+        return <CardProcessor user={user} onBack={() => setCurrentPage('dashboard')} onBalanceUpdate={checkAuthStatus} onNavigate={setCurrentPage} />;
       case 'crypto':
         return <CryptoWallet user={user} onBack={() => setCurrentPage('dashboard')} />;
       case 'business':
