@@ -254,25 +254,29 @@ function App() {
   const renderCurrentPage = () => {
     switch(currentPage) {
       case 'home':
-        return <Homepage onNavigate={setCurrentPage} />;
+        return <Homepage onShowLogin={handleLogin} />;
       case 'dashboard':
         return <Dashboard user={user} onNavigate={setCurrentPage} />;
       case 'send':
         return <SendMoney user={user} onBack={() => setCurrentPage('dashboard')} />;
       case 'receive':
         return <ReceiveMoney user={user} onBack={() => setCurrentPage('dashboard')} />;
+      case 'cards':
+        return <CardProcessor user={user} onBack={() => setCurrentPage('dashboard')} onBalanceUpdate={checkAuthStatus} />;
       case 'crypto':
         return <CryptoWallet user={user} onBack={() => setCurrentPage('dashboard')} />;
-      case 'cards':
-        return <CardProcessor user={user} onBack={() => setCurrentPage('dashboard')} />;
       case 'business':
         return <BusinessPortal user={user} onBack={() => setCurrentPage('dashboard')} />;
-      case 'admin':
-        return <AdminDashboard user={user} onBack={() => setCurrentPage('dashboard')} />;
       case 'settings':
-        return <UserSettings user={user} onLogout={handleLogout} onBack={() => setCurrentPage('dashboard')} onNavigate={setCurrentPage} />;
+        return <UserSettings user={user} onBack={() => setCurrentPage('dashboard')} onLogout={handleLogout} />;
+      case 'admin':
+        return user?.role === 'admin' ? (
+          <AdminDashboard user={user} onBack={() => setCurrentPage('dashboard')} />
+        ) : (
+          <Dashboard user={user} onNavigate={setCurrentPage} />
+        );
       case 'terms':
-        return <TermsConditions onBack={() => setCurrentPage('settings')} />;
+        return <TermsConditions onBack={() => setCurrentPage('dashboard')} />;
       default:
         return <Dashboard user={user} onNavigate={setCurrentPage} />;
     }
