@@ -232,8 +232,8 @@ const CardProcessor = ({ user, onBack, onBalanceUpdate }) => {
       const response = await axios.post(`${backendUrl}/api/fund-account`, fundData);
       
       // Show success with transaction details
-      const { amount, fee, net_amount } = response.data;
-      setSuccess(`¡Dinero agregado exitosamente! 💰\nMonto: $${amount.toFixed(2)}\nFee: $${fee.toFixed(2)}\nRecibido: $${net_amount.toFixed(2)}`);
+      const { amount, fee, net_amount, new_balance, card_available_balance } = response.data;
+      setSuccess(`¡Dinero agregado GRATIS! 🎉💰\n✅ Agregado: $${amount.toFixed(2)}\n✅ Fee: $${fee.toFixed(2)} (GRATIS!)\n✅ Nuevo balance: $${new_balance.toFixed(2)}\n💳 Disponible en tarjeta: $${card_available_balance.toFixed(2)}`);
       
       setShowFundAccount(false);
       setFundAmount('');
