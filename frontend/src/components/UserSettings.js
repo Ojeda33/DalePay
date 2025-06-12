@@ -220,7 +220,10 @@ const UserSettings = ({ user, onLogout, onBack, onNavigate }) => {
             </div>
           </button>
 
-          <button className="w-full text-left p-3 border border-gray-200 rounded-lg hover:bg-gray-50">
+          <button 
+            onClick={() => onNavigate && onNavigate('terms')}
+            className="w-full text-left p-3 border border-gray-200 rounded-lg hover:bg-gray-50"
+          >
             <div className="flex items-center space-x-3">
               <span className="text-2xl">📋</span>
               <div>
