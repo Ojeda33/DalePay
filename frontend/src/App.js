@@ -199,7 +199,7 @@ function App() {
       case 'admin':
         return <AdminDashboard user={user} onBack={() => setCurrentPage('dashboard')} />;
       case 'settings':
-        return <UserSettings user={user} onLogout={handleLogout} onBack={() => setCurrentPage('dashboard')} />;
+        return <UserSettings user={user} onLogout={handleLogout} onBack={() => setCurrentPage('dashboard')} onNavigate={setCurrentPage} />;
       case 'terms':
         return <TermsConditions onBack={() => setCurrentPage('settings')} />;
       default:
