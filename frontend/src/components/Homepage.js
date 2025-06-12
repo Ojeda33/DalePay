@@ -125,28 +125,28 @@ const Homepage = ({ onShowLogin }) => {
       name: 'María Rodríguez',
       location: 'San Juan',
       text: 'DalePay cambió mi vida. Ahora puedo enviar dinero a mi familia en segundos, sin filas ni esperas.',
-      avatar: '👩‍💼',
+      avatar: 'https://images.unsplash.com/photo-1617931663773-482a2e9ddc89?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2Njd8MHwxfHNlYXJjaHwxfHxoYXBweSUyMGxhdGlub3xlbnwwfHx8fDE3NDk2OTg4MzB8MA&ixlib=rb-4.1.0&q=85',
       rating: 5
     },
     {
       name: 'Carlos Vélez',
       location: 'Bayamón',
       text: 'Perfecto para mi colmado. Los pagos llegan al instante y mis clientes están felices.',
-      avatar: '👨‍💻',
+      avatar: 'https://images.pexels.com/photos/28243016/pexels-photo-28243016.jpeg',
       rating: 5
     },
     {
       name: 'Ana Torres',
       location: 'Ponce',
       text: 'El crypto wallet es increíble. Puedo manejar Bitcoin y dólares en la misma app.',
-      avatar: '👩‍🎓',
+      avatar: 'https://images.pexels.com/photos/28243040/pexels-photo-28243040.jpeg',
       rating: 5
     },
     {
       name: 'Luis Santiago',
       location: 'Caguas',
       text: 'Como empresario, DalePay me ahorra tiempo y dinero. Las tarifas son justas y transparentes.',
-      avatar: '👨‍🎨',
+      avatar: 'https://images.unsplash.com/photo-1542473079-b8419a8853c5?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzF8MHwxfHNlYXJjaHwyfHxwcm9mZXNzaW9uYWwlMjBsYXRpbm8lMjBwb3J0cmFpdHxlbnwwfHx8fDE3NDk2OTg4NDR8MA&ixlib=rb-4.1.0&q=85',
       rating: 5
     }
   ];
