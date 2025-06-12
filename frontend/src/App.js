@@ -266,6 +266,8 @@ function App() {
         return <CardProcessor user={user} onBack={() => setCurrentPage('dashboard')} onBalanceUpdate={checkAuthStatus} onNavigate={setCurrentPage} />;
       case 'crypto':
         return <CryptoWallet user={user} onBack={() => setCurrentPage('dashboard')} />;
+      case 'bank-linking':
+        return <RealBankLinking user={user} onBack={() => setCurrentPage('cards')} onBankLinked={() => setCurrentPage('dashboard')} />;
       case 'business':
         return <BusinessPortal user={user} onBack={() => setCurrentPage('dashboard')} />;
       case 'settings':
