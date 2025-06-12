@@ -369,9 +369,69 @@ class DalePayAPITests(unittest.TestCase):
             print(f"❌ Admin login failed (this is expected if admin credentials are different): {data}")
 
 
+def test_provided_credentials():
+    print("=" * 80)
+    print("Testing Provided Credentials")
+    print("=" * 80)
+    
+    backend_url = "https://cbc34480-4478-4ec3-b260-5a640bb044d0.preview.emergentagent.com"
+    api = DalePayAPITester(backend_url)
+    
+    # Test login with provided credentials
+    print("\n🔍 Testing login with provided credentials (test@dalepay.com / testpass123)...")
+    success, data = api.login_user("test@dalepay.com", "testpass123")
+    
+    if success:
+        print("✅ Login successful with provided credentials")
+        
+        # Test user profile
+        print("\n🔍 Testing user profile retrieval...")
+        profile_success, profile_data = api.get_user_profile()
+        if profile_success:
+            print(f"✅ Profile retrieved successfully: {profile_data.get('full_name')}")
+        else:
+            print(f"❌ Failed to retrieve profile: {profile_data}")
+        
+        # Test balance
+        print("\n🔍 Testing balance retrieval...")
+        balance_success, balance_data = api.get_user_balance()
+        if balance_success:
+            print(f"✅ Balance retrieved successfully: ${balance_data.get('balance')}")
+        else:
+            print(f"❌ Failed to retrieve balance: {balance_data}")
+            
+        # Test transfers
+        print("\n🔍 Testing transfers retrieval...")
+        transfers_success, transfers_data = api.get_transfers()
+        if transfers_success:
+            print(f"✅ Transfers retrieved successfully: {len(transfers_data)} transfers found")
+        else:
+            print(f"❌ Failed to retrieve transfers: {transfers_data}")
+            
+        # Test businesses
+        print("\n🔍 Testing businesses retrieval...")
+        businesses_success, businesses_data = api.get_businesses()
+        if businesses_success:
+            print(f"✅ Businesses retrieved successfully: {len(businesses_data)} businesses found")
+        else:
+            print(f"❌ Failed to retrieve businesses: {businesses_data}")
+        
+        return True
+    else:
+        print(f"❌ Login failed with provided credentials: {data}")
+        return False
+
 def run_api_tests():
     print("=" * 80)
     print("DalePay API Test Suite")
+    print("=" * 80)
+    
+    # First test the provided credentials
+    provided_creds_success = test_provided_credentials()
+    
+    # Then run the full test suite
+    print("\n" + "=" * 80)
+    print("Running Full API Test Suite")
     print("=" * 80)
     
     # Run the tests
@@ -386,7 +446,7 @@ def run_api_tests():
     print(f"ERRORS: {len(test_results.errors)}")
     
     # Return True if all tests passed
-    return len(test_results.failures) == 0 and len(test_results.errors) == 0
+    return len(test_results.failures) == 0 and len(test_results.errors) == 0 and provided_creds_success
 
 
 if __name__ == "__main__":
