@@ -148,6 +148,11 @@ function App() {
     return <Homepage onShowLogin={handleLogin} />;
   }
 
+  // Show app security lock screen if not unlocked
+  if (!isAppUnlocked) {
+    return <AppSecurity onUnlock={() => setIsAppUnlocked(true)} />;
+  }
+
   const BottomNavigation = () => (
     <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-2">
       <div className="flex justify-around items-center max-w-md mx-auto">
