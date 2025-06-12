@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
-const CardProcessor = ({ user, onBack, onBalanceUpdate }) => {
+const CardProcessor = ({ user, onBack, onBalanceUpdate, onNavigate }) => {
   const [cards, setCards] = useState([]);
   const [showAddCard, setShowAddCard] = useState(false);
   const [showFundAccount, setShowFundAccount] = useState(false);
