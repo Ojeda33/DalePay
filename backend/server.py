@@ -417,11 +417,102 @@ async def create_moov_business_account(business_data: dict, user: User) -> str:
     import uuid
     return f"moov_business_{uuid.uuid4().hex[:8]}"
 
-@api_router.get("/businesses")
-async def get_user_businesses(current_user: User = Depends(get_current_user)):
-    """Get user's businesses"""
-    businesses = await db.businesses.find({"owner_user_id": current_user.id}).to_list(10)
-    return businesses
+@api_router.get("/businesses/{business_id}")
+async def get_business_details(business_id: str, current_user: User = Depends(get_current_user)):
+    """Get detailed business information"""
+    business = await db.businesses.find_one({"id": business_id, "owner_user_id": current_user.id})
+    if not business:
+        raise HTTPException(status_code=404, detail="Business not found")
+    
+    return business
+
+@api_router.post("/businesses/{business_id}/integrations")
+async def setup_business_integration(
+    business_id: str, 
+    integration_data: dict, 
+    current_user: User = Depends(get_current_user)
+):
+    """Setup business integrations (Uber Eats, DoorDash, ATH Móvil)"""
+    business = await db.businesses.find_one({"id": business_id, "owner_user_id": current_user.id})
+    if not business:
+        raise HTTPException(status_code=404, detail="Business not found")
+    
+    integration_type = integration_data["type"]  # uber_eats, doordash, ath_movil
+    
+    # Simulate integration setup
+    integration_config = {
+        "type": integration_type,
+        "status": "active",
+        "api_key": f"demo_{integration_type}_{uuid.uuid4().hex[:8]}",
+        "webhook_url": f"https://api.dalepay.com/webhooks/{business_id}/{integration_type}",
+        "created_at": datetime.utcnow().isoformat()
+    }
+    
+    # Update business integrations
+    current_integrations = business.get("integrations", {})
+    current_integrations[integration_type] = integration_config
+    
+    await db.businesses.update_one(
+        {"id": business_id},
+        {"$set": {"integrations": current_integrations}}
+    )
+    
+    return {
+        "message": f"{integration_type} integration setup successful",
+        "integration": integration_config
+    }
+
+@api_router.get("/businesses/{business_id}/integrations")
+async def get_business_integrations(business_id: str, current_user: User = Depends(get_current_user)):
+    """Get business integrations"""
+    business = await db.businesses.find_one({"id": business_id, "owner_user_id": current_user.id})
+    if not business:
+        raise HTTPException(status_code=404, detail="Business not found")
+    
+    return business.get("integrations", {})
+
+@api_router.post("/businesses/{business_id}/cashout")
+async def business_cashout(
+    business_id: str, 
+    cashout_data: dict, 
+    current_user: User = Depends(get_current_user)
+):
+    """Cash out business funds"""
+    business = await db.businesses.find_one({"id": business_id, "owner_user_id": current_user.id})
+    if not business:
+        raise HTTPException(status_code=404, detail="Business not found")
+    
+    amount = float(cashout_data["amount"])
+    cashout_method = cashout_data["method"]  # bank, card
+    
+    if amount > business["balance"]:
+        raise HTTPException(status_code=400, detail="Insufficient business funds")
+    
+    # Process cashout
+    new_balance = business["balance"] - amount
+    
+    await db.businesses.update_one(
+        {"id": business_id},
+        {"$set": {"balance": new_balance}}
+    )
+    
+    # Create cashout record
+    cashout_record = {
+        "id": str(uuid.uuid4()),
+        "business_id": business_id,
+        "amount": amount,
+        "method": cashout_method,
+        "status": "completed",
+        "created_at": datetime.utcnow().isoformat()
+    }
+    
+    await db.business_cashouts.insert_one(cashout_record)
+    
+    return {
+        "message": "Cashout successful",
+        "cashout_id": cashout_record["id"],
+        "new_balance": new_balance
+    }
 
 # Admin routes
 @api_router.get("/admin/dashboard")
