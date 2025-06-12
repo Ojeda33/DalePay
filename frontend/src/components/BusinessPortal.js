@@ -42,8 +42,8 @@ const BusinessPortal = ({ user, onBack }) => {
   };
 
   const handleCreateBusiness = async () => {
-    if (!businessForm.name || !businessForm.business_type) {
-      setError('Nombre y tipo de negocio son requeridos');
+    if (!businessForm.name || !businessForm.business_type || !businessForm.business_structure || !businessForm.owner_name) {
+      setError('Nombre, tipo de negocio, estructura legal y nombre del propietario son requeridos');
       return;
     }
 
