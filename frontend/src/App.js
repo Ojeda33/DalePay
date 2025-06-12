@@ -32,6 +32,7 @@ function App() {
   const [currentPage, setCurrentPage] = useState('dashboard');
   const [showJorgeTour, setShowJorgeTour] = useState(false);
   const [isAppUnlocked, setIsAppUnlocked] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
   const [hasNotifications, setHasNotifications] = useState({
     home: false,
     dashboard: false,
