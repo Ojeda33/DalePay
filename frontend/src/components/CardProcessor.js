@@ -818,6 +818,16 @@ const CardProcessor = ({ user, onBack, onBalanceUpdate }) => {
         >
           + Agregar nueva tarjeta
         </button>
+        
+        <button
+          onClick={() => {
+            // Navigate to real bank linking
+            window.location.href = '#real-banking';
+          }}
+          className="w-full bg-gradient-to-r from-green-500 via-blue-500 to-purple-500 text-white py-4 rounded-2xl font-bold hover:from-green-600 hover:via-blue-600 hover:to-purple-600 transition-all shadow-lg"
+        >
+          🏦 CONECTAR BANCO REAL (Balance Verdadero)
+        </button>
       </div>
 
       {/* Fee Structure */}
