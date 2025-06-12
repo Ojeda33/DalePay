@@ -638,7 +638,7 @@ const CardProcessor = ({ user, onBack, onBalanceUpdate }) => {
                 Procesando pago...
               </div>
             ) : (
-              `💰 Agregar ${fundAmount ? formatCurrency(parseFloat(fundAmount)) : 'dinero'}`
+              `💰 Agregar ${fundAmount ? formatCurrency(parseFloat(fundAmount)) : 'dinero'} GRATIS`
             )}
           </button>
 
