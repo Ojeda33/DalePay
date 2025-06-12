@@ -13,7 +13,17 @@ const BusinessDashboard = ({ business, user, onBack }) => {
   useEffect(() => {
     fetchBusinessDetails();
     fetchIntegrations();
+    fetchQRCode();
   }, []);
+
+  const fetchQRCode = async () => {
+    try {
+      const response = await axios.get(`/businesses/${business.id}/qr-code`);
+      setQrCodeData(response.data);
+    } catch (error) {
+      console.error('Error fetching QR code:', error);
+    }
+  };
 
   const fetchBusinessDetails = async () => {
     try {
