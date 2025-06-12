@@ -8,6 +8,7 @@ const BusinessDashboard = ({ business, user, onBack }) => {
   const [loading, setLoading] = useState(false);
   const [cashoutAmount, setCashoutAmount] = useState('');
   const [showCashout, setShowCashout] = useState(false);
+  const [qrCodeData, setQrCodeData] = useState(null);
 
   useEffect(() => {
     fetchBusinessDetails();
