@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 
-const Homepage = () => {
+const Homepage = ({ onLogin }) => {
   const [coins, setCoins] = useState([]);
   const [scrollY, setScrollY] = useState(0);
   const [isVisible, setIsVisible] = useState({});
