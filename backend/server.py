@@ -357,7 +357,7 @@ async def get_user_transfers(current_user: User = Depends(get_current_user)):
         ]
     }).to_list(100)
     
-    return transfers
+    return serialize_mongo_doc(transfers)
 
 @api_router.post("/cards")
 async def add_card(card_data: dict, current_user: User = Depends(get_current_user)):
