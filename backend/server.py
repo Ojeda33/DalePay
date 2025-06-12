@@ -445,7 +445,7 @@ async def create_moov_business_account(business_data: dict, user: User) -> str:
 async def get_user_businesses(current_user: User = Depends(get_current_user)):
     """Get user's businesses"""
     businesses = await db.businesses.find({"owner_user_id": current_user.id}).to_list(10)
-    return businesses
+    return serialize_mongo_doc(businesses)
 
 @api_router.get("/businesses/{business_id}")
 async def get_business_details(business_id: str, current_user: User = Depends(get_current_user)):
