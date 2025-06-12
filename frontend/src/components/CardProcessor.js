@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
-const CardProcessor = ({ user, onBack }) => {
+const CardProcessor = ({ user, onBack, onBalanceUpdate }) => {
   const [cards, setCards] = useState([]);
   const [showAddCard, setShowAddCard] = useState(false);
   const [showFundAccount, setShowFundAccount] = useState(false);
+  const [showRemoveCard, setShowRemoveCard] = useState(null);
   const [selectedCard, setSelectedCard] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   const [cardForm, setCardForm] = useState({
     card_number: '',
@@ -32,10 +34,12 @@ const CardProcessor = ({ user, onBack }) => {
 
   const fetchCards = async () => {
     try {
-      const response = await axios.get('/cards');
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || import.meta.env.REACT_APP_BACKEND_URL;
+      const response = await axios.get(`${backendUrl}/api/cards`);
       setCards(response.data);
     } catch (error) {
       console.error('Error fetching cards:', error);
+      setError('Error cargando tarjetas');
     }
   };
 
@@ -129,6 +133,8 @@ const CardProcessor = ({ user, onBack }) => {
     if (!validateCard()) return;
 
     setLoading(true);
+    setError('');
+    
     try {
       const cardData = {
         card_number: cardForm.card_number.replace(/\s/g, ''), // Remove spaces
@@ -140,7 +146,8 @@ const CardProcessor = ({ user, onBack }) => {
         billing_address: cardForm.billing_address
       };
 
-      const response = await axios.post('/cards', cardData);
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || import.meta.env.REACT_APP_BACKEND_URL;
+      const response = await axios.post(`${backendUrl}/api/cards`, cardData);
       
       setShowAddCard(false);
       setCardForm({
@@ -158,13 +165,34 @@ const CardProcessor = ({ user, onBack }) => {
         }
       });
       setError('');
+      setSuccess('¡Tarjeta agregada exitosamente! 🎉');
       await fetchCards();
       
-      // Show success message
-      alert('¡Tarjeta agregada exitosamente!');
+      setTimeout(() => setSuccess(''), 3000);
     } catch (error) {
       console.error('Card addition error:', error);
       setError(error.response?.data?.detail || 'Error agregando tarjeta. Verifica los datos e inténtalo de nuevo.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRemoveCard = async (cardId) => {
+    setLoading(true);
+    setError('');
+    
+    try {
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || import.meta.env.REACT_APP_BACKEND_URL;
+      await axios.delete(`${backendUrl}/api/cards/${cardId}`);
+      
+      setShowRemoveCard(null);
+      setSuccess('Tarjeta removida exitosamente 🗑️');
+      await fetchCards();
+      
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (error) {
+      console.error('Card removal error:', error);
+      setError(error.response?.data?.detail || 'Error removiendo tarjeta');
     } finally {
       setLoading(false);
     }
@@ -176,24 +204,50 @@ const CardProcessor = ({ user, onBack }) => {
       return;
     }
 
+    if (parseFloat(fundAmount) > 10000) {
+      setError('Límite máximo: $10,000 por transacción');
+      return;
+    }
+
+    if (parseFloat(fundAmount) < 1) {
+      setError('Monto mínimo: $1');
+      return;
+    }
+
     if (!selectedCard) {
       setError('Selecciona una tarjeta');
       return;
     }
 
     setLoading(true);
+    setError('');
+    
     try {
       const fundData = {
         card_id: selectedCard.id,
         amount: parseFloat(fundAmount)
       };
 
-      await axios.post('/fund-account', fundData);
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || import.meta.env.REACT_APP_BACKEND_URL;
+      const response = await axios.post(`${backendUrl}/api/fund-account`, fundData);
+      
+      // Show success with transaction details
+      const { amount, fee, net_amount } = response.data;
+      setSuccess(`¡Dinero agregado exitosamente! 💰\nMonto: $${amount.toFixed(2)}\nFee: $${fee.toFixed(2)}\nRecibido: $${net_amount.toFixed(2)}`);
+      
       setShowFundAccount(false);
       setFundAmount('');
       setSelectedCard(null);
+      
+      // Notify parent component to update balance
+      if (onBalanceUpdate) {
+        onBalanceUpdate();
+      }
+      
+      setTimeout(() => setSuccess(''), 5000);
     } catch (error) {
-      setError(error.response?.data?.detail || 'Error procesando el pago');
+      console.error('Fund account error:', error);
+      setError(error.response?.data?.detail || 'Error procesando el pago. Verifica que tu tarjeta tenga fondos suficientes.');
     } finally {
       setLoading(false);
     }
@@ -206,11 +260,93 @@ const CardProcessor = ({ user, onBack }) => {
     }).format(amount);
   };
 
-  const quickAmounts = ['20', '50', '100', '200'];
+  const quickAmounts = ['20', '50', '100', '200', '500'];
+
+  const getCardIcon = (cardType) => {
+    switch(cardType) {
+      case 'Visa': return '💳';
+      case 'Mastercard': return '💳';
+      case 'American Express': return '💎';
+      case 'Discover': return '🔍';
+      default: return '💳';
+    }
+  };
+
+  const getCardGradient = (cardType) => {
+    switch(cardType) {
+      case 'Visa': return 'from-blue-600 to-blue-800';
+      case 'Mastercard': return 'from-red-600 to-red-800';
+      case 'American Express': return 'from-green-600 to-green-800';
+      case 'Discover': return 'from-orange-600 to-orange-800';
+      default: return 'from-gray-600 to-gray-800';
+    }
+  };
+
+  // Success/Error Messages Component
+  const StatusMessage = () => {
+    if (success) {
+      return (
+        <div className="fixed top-4 left-4 right-4 z-50 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg shadow-lg">
+          <div className="flex items-center">
+            <span className="text-green-600 mr-2">✅</span>
+            <span className="whitespace-pre-line">{success}</span>
+          </div>
+        </div>
+      );
+    }
+    
+    if (error) {
+      return (
+        <div className="fixed top-4 left-4 right-4 z-50 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg shadow-lg">
+          <div className="flex items-center">
+            <span className="text-red-600 mr-2">❌</span>
+            <span>{error}</span>
+          </div>
+        </div>
+      );
+    }
+    
+    return null;
+  };
+
+  // Remove Card Confirmation Modal
+  const RemoveCardModal = ({ card, onConfirm, onCancel }) => (
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl p-6 max-w-sm w-full">
+        <div className="text-center">
+          <div className="text-4xl mb-4">🗑️</div>
+          <h3 className="text-xl font-bold text-gray-800 mb-2">¿Remover tarjeta?</h3>
+          <p className="text-gray-600 mb-2">
+            {card.card_type} •••• {card.card_number_last4}
+          </p>
+          <p className="text-gray-600 mb-6">
+            Esta acción no se puede deshacer
+          </p>
+          <div className="space-y-3">
+            <button
+              onClick={onConfirm}
+              disabled={loading}
+              className="w-full bg-red-600 text-white py-3 rounded-xl font-medium hover:bg-red-700 disabled:bg-gray-300"
+            >
+              {loading ? 'Removiendo...' : 'Sí, remover'}
+            </button>
+            <button
+              onClick={onCancel}
+              className="w-full border border-gray-300 text-gray-700 py-3 rounded-xl font-medium hover:bg-gray-50"
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 
   if (showAddCard) {
     return (
       <div className="p-4 max-w-md mx-auto">
+        <StatusMessage />
+        
         <div className="flex items-center justify-between mb-6">
           <button
             onClick={() => setShowAddCard(false)}
@@ -226,10 +362,10 @@ const CardProcessor = ({ user, onBack }) => {
 
         <div className="space-y-6">
           {/* Card Preview */}
-          <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-6 text-white">
+          <div className={`bg-gradient-to-r ${getCardGradient(detectCardType(cardForm.card_number))} rounded-2xl p-6 text-white shadow-xl`}>
             <div className="flex justify-between items-start mb-8">
               <div className="text-sm opacity-90">DalePay™ Card</div>
-              <div className="text-2xl">💳</div>
+              <div className="text-2xl">{getCardIcon(detectCardType(cardForm.card_number))}</div>
             </div>
             <div className="text-xl font-mono tracking-wider mb-4">
               {cardForm.card_number || '**** **** **** ****'}
@@ -244,7 +380,7 @@ const CardProcessor = ({ user, onBack }) => {
               <div className="text-right">
                 <div className="text-xs opacity-75">TITULAR</div>
                 <div className="text-sm">
-                  {cardForm.cardholder_name || 'NOMBRE COMPLETO'}
+                  {cardForm.cardholder_name.toUpperCase() || 'NOMBRE COMPLETO'}
                 </div>
               </div>
             </div>
@@ -254,7 +390,7 @@ const CardProcessor = ({ user, onBack }) => {
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Número de tarjeta
+                Número de tarjeta *
               </label>
               <input
                 type="text"
@@ -265,10 +401,10 @@ const CardProcessor = ({ user, onBack }) => {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Mes
+                  Mes *
                 </label>
                 <input
                   type="text"
@@ -281,7 +417,7 @@ const CardProcessor = ({ user, onBack }) => {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Año
+                  Año *
                 </label>
                 <input
                   type="text"
@@ -292,25 +428,24 @@ const CardProcessor = ({ user, onBack }) => {
                   className="w-full border-2 border-gray-300 rounded-xl py-3 px-4 font-mono focus:outline-none focus:border-blue-500"
                 />
               </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  CVV *
+                </label>
+                <input
+                  type="text"
+                  value={cardForm.cvv}
+                  onChange={(e) => handleCardInputChange('cvv', e.target.value)}
+                  placeholder="123"
+                  maxLength="4"
+                  className="w-full border-2 border-gray-300 rounded-xl py-3 px-4 font-mono focus:outline-none focus:border-blue-500"
+                />
+              </div>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                CVV
-              </label>
-              <input
-                type="text"
-                value={cardForm.cvv}
-                onChange={(e) => handleCardInputChange('cvv', e.target.value)}
-                placeholder="123"
-                maxLength="4"
-                className="w-full border-2 border-gray-300 rounded-xl py-3 px-4 font-mono focus:outline-none focus:border-blue-500"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Nombre del titular
+                Nombre del titular *
               </label>
               <input
                 type="text"
@@ -359,16 +494,10 @@ const CardProcessor = ({ user, onBack }) => {
             </div>
           </div>
 
-          {error && (
-            <div className="p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg">
-              {error}
-            </div>
-          )}
-
           <button
             onClick={handleAddCard}
             disabled={loading}
-            className="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold disabled:bg-gray-300 disabled:cursor-not-allowed"
+            className="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold disabled:bg-gray-300 disabled:cursor-not-allowed hover:bg-blue-700 transition-colors"
           >
             {loading ? (
               <div className="flex items-center justify-center">
@@ -376,7 +505,7 @@ const CardProcessor = ({ user, onBack }) => {
                 Agregando tarjeta...
               </div>
             ) : (
-              'Agregar tarjeta'
+              'Agregar tarjeta 💳'
             )}
           </button>
 
@@ -399,6 +528,8 @@ const CardProcessor = ({ user, onBack }) => {
   if (showFundAccount) {
     return (
       <div className="p-4 max-w-md mx-auto">
+        <StatusMessage />
+        
         <div className="flex items-center justify-between mb-6">
           <button
             onClick={() => setShowFundAccount(false)}
@@ -415,7 +546,7 @@ const CardProcessor = ({ user, onBack }) => {
         <div className="space-y-6">
           <div className="text-center">
             <h2 className="text-2xl font-bold text-gray-800 mb-2">¿Cuánto agregas?</h2>
-            <p className="text-gray-600">Se cobrará un fee de 2.9%</p>
+            <p className="text-gray-600">Se cobrará un fee de 2.9% + procesamiento</p>
           </div>
 
           <div className="text-center">
@@ -434,18 +565,21 @@ const CardProcessor = ({ user, onBack }) => {
               />
             </div>
             {fundAmount && (
-              <div className="mt-3 text-sm">
+              <div className="mt-3 text-sm space-y-1">
                 <p className="text-gray-600">
                   Fee (2.9%): {formatCurrency(parseFloat(fundAmount) * 0.029)}
                 </p>
                 <p className="font-medium text-gray-800">
                   Total a cobrar: {formatCurrency(parseFloat(fundAmount))}
                 </p>
+                <p className="text-green-600 font-medium">
+                  Recibirás: {formatCurrency(parseFloat(fundAmount) - (parseFloat(fundAmount) * 0.029))}
+                </p>
               </div>
             )}
           </div>
 
-          <div className="grid grid-cols-4 gap-2">
+          <div className="grid grid-cols-5 gap-2">
             {quickAmounts.map((amount) => (
               <button
                 key={amount}
@@ -481,10 +615,7 @@ const CardProcessor = ({ user, onBack }) => {
                       <p className="text-sm text-gray-600">{card.cardholder_name}</p>
                     </div>
                     <div className="text-2xl">
-                      {card.card_type === 'Visa' && '💳'}
-                      {card.card_type === 'Mastercard' && '💳'}
-                      {card.card_type === 'American Express' && '💳'}
-                      {card.card_type === 'Discover' && '💳'}
+                      {getCardIcon(card.card_type)}
                     </div>
                   </div>
                 </button>
@@ -492,26 +623,32 @@ const CardProcessor = ({ user, onBack }) => {
             </div>
           </div>
 
-          {error && (
-            <div className="p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg text-center">
-              {error}
-            </div>
-          )}
-
           <button
             onClick={handleFundAccount}
-            disabled={loading || !fundAmount || !selectedCard}
-            className="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold disabled:bg-gray-300 disabled:cursor-not-allowed"
+            disabled={loading || !fundAmount || !selectedCard || parseFloat(fundAmount) <= 0}
+            className="w-full bg-gradient-to-r from-green-600 to-blue-600 text-white py-4 rounded-2xl font-bold disabled:bg-gray-300 disabled:cursor-not-allowed hover:from-green-700 hover:to-blue-700 transition-all"
           >
             {loading ? (
               <div className="flex items-center justify-center">
                 <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                Procesando...
+                Procesando pago...
               </div>
             ) : (
-              'Agregar dinero'
+              `💰 Agregar ${fundAmount ? formatCurrency(parseFloat(fundAmount)) : 'dinero'}`
             )}
           </button>
+
+          <div className="bg-yellow-50 rounded-xl p-4">
+            <div className="flex items-start space-x-3">
+              <div className="text-lg">⚠️</div>
+              <div>
+                <h4 className="font-medium text-yellow-800 mb-1">Nota importante</h4>
+                <p className="text-yellow-700 text-sm">
+                  Verifica que tu tarjeta tenga fondos suficientes. Los pagos rechazados pueden generar cargos adicionales de tu banco.
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -519,6 +656,17 @@ const CardProcessor = ({ user, onBack }) => {
 
   return (
     <div className="p-4 max-w-md mx-auto">
+      <StatusMessage />
+      
+      {/* Remove Card Modal */}
+      {showRemoveCard && (
+        <RemoveCardModal
+          card={showRemoveCard}
+          onConfirm={() => handleRemoveCard(showRemoveCard.id)}
+          onCancel={() => setShowRemoveCard(null)}
+        />
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <button
@@ -539,10 +687,21 @@ const CardProcessor = ({ user, onBack }) => {
       <div className="space-y-4 mb-6">
         {cards.length > 0 ? (
           cards.map((card) => (
-            <div key={card.id} className="bg-gradient-to-r from-gray-800 to-gray-900 rounded-2xl p-6 text-white">
+            <div key={card.id} className={`bg-gradient-to-r ${getCardGradient(card.card_type)} rounded-2xl p-6 text-white shadow-xl relative`}>
+              {/* Remove button */}
+              <button
+                onClick={() => setShowRemoveCard(card)}
+                className="absolute top-4 right-4 w-8 h-8 bg-white/20 rounded-full flex items-center justify-center hover:bg-white/30 transition-colors"
+                title="Remover tarjeta"
+              >
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd"/>
+                </svg>
+              </button>
+              
               <div className="flex justify-between items-start mb-4">
                 <div className="text-sm opacity-75">DalePay™</div>
-                <div className="text-2xl">💳</div>
+                <div className="text-2xl">{getCardIcon(card.card_type)}</div>
               </div>
               <div className="text-xl font-mono tracking-wider mb-4">
                 •••• •••• •••• {card.card_number_last4}
@@ -556,7 +715,7 @@ const CardProcessor = ({ user, onBack }) => {
                 </div>
                 <div className="text-right">
                   <div className="text-xs opacity-75">TITULAR</div>
-                  <div className="text-sm">{card.cardholder_name}</div>
+                  <div className="text-sm">{card.cardholder_name.toUpperCase()}</div>
                 </div>
               </div>
             </div>
@@ -577,7 +736,7 @@ const CardProcessor = ({ user, onBack }) => {
         {cards.length > 0 && (
           <button
             onClick={() => setShowFundAccount(true)}
-            className="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold"
+            className="w-full bg-gradient-to-r from-green-600 to-blue-600 text-white py-4 rounded-2xl font-bold hover:from-green-700 hover:to-blue-700 transition-all shadow-lg"
           >
             💰 Agregar dinero
           </button>
@@ -585,7 +744,7 @@ const CardProcessor = ({ user, onBack }) => {
         
         <button
           onClick={() => setShowAddCard(true)}
-          className="w-full border-2 border-blue-600 text-blue-600 py-4 rounded-2xl font-bold"
+          className="w-full border-2 border-blue-600 text-blue-600 py-4 rounded-2xl font-bold hover:bg-blue-50 transition-colors"
         >
           + Agregar nueva tarjeta
         </button>
@@ -632,6 +791,10 @@ const CardProcessor = ({ user, onBack }) => {
           <div className="flex justify-between">
             <span className="text-gray-600">Retiros a banco:</span>
             <span className="font-medium text-green-600">Gratis</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-600">Límite por transacción:</span>
+            <span className="font-medium">$10,000</span>
           </div>
         </div>
       </div>
