@@ -90,11 +90,19 @@ class Business(BaseModel):
     name: str
     owner_user_id: str
     business_type: str
+    description: Optional[str] = None
+    address: Optional[str] = None
+    phone: Optional[str] = None
+    website: Optional[str] = None
     moov_account_id: Optional[str] = None
     qr_code: Optional[str] = None
     balance: float = 0.0
+    total_revenue: float = 0.0
+    monthly_revenue: float = 0.0
+    total_transactions: int = 0
     created_at: datetime = Field(default_factory=datetime.utcnow)
     is_approved: bool = False
+    integrations: Dict[str, Any] = Field(default_factory=dict)  # Store integration settings
 
 # Utility Functions
 def hash_password(password: str) -> str:
