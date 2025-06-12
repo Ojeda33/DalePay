@@ -26,8 +26,7 @@ requests-oauthlib==2.0.0
 pydantic[email]==2.6.4
 email-validator==2.2.0
 
-# Financial & Decimal Operations
-decimal==1.70
+# Financial & Decimal Operations (decimal is built-in to Python)
 
 # Environment & Configuration
 python-dotenv==1.0.1
