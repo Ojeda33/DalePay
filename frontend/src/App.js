@@ -77,17 +77,7 @@ function App() {
   }
 
   if (!isAuthenticated) {
-    return (
-      <Router>
-        <Routes>
-          <Route path="/terms" element={<TermsConditions />} />
-          <Route 
-            path="/*" 
-            element={<LoginSystem onLogin={handleLogin} />} 
-          />
-        </Routes>
-      </Router>
-    );
+    return <Homepage />;
   }
 
   const BottomNavigation = () => (
