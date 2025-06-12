@@ -785,16 +785,20 @@ const CardProcessor = ({ user, onBack, onBalanceUpdate }) => {
         <h4 className="font-medium text-gray-800 mb-3">Tarifas transparentes</h4>
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">
-            <span className="text-gray-600">Agregar dinero con tarjeta:</span>
-            <span className="font-medium">2.9%</span>
+            <span className="text-gray-600">Agregar dinero:</span>
+            <span className="font-medium text-green-600">GRATIS 🎉</span>
           </div>
           <div className="flex justify-between">
             <span className="text-gray-600">Transferencias entre usuarios:</span>
             <span className="font-medium text-green-600">Gratis</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-gray-600">Retiros a banco:</span>
+            <span className="text-gray-600">Retiro estándar (1-3 días):</span>
             <span className="font-medium text-green-600">Gratis</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-600">Retiro instantáneo:</span>
+            <span className="font-medium">1.40%</span>
           </div>
           <div className="flex justify-between">
             <span className="text-gray-600">Límite por transacción:</span>
