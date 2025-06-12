@@ -466,11 +466,17 @@ const Homepage = ({ onShowLogin }) => {
             </p>
             
             <div className="space-y-6 md:space-y-0 md:space-x-8 md:flex md:justify-center mb-12">
-              <button className="w-full md:w-auto bg-white text-blue-600 px-12 py-6 rounded-full text-xl font-bold hover:bg-blue-50 transition-all duration-300 shadow-2xl transform hover:scale-105">
+              <button 
+                onClick={() => setShowLogin(true)}
+                className="w-full md:w-auto bg-white text-blue-600 px-12 py-6 rounded-full text-xl font-bold hover:bg-blue-50 transition-all duration-300 shadow-2xl transform hover:scale-105"
+              >
                 🚀 Crear Cuenta Gratis
               </button>
-              <button className="w-full md:w-auto border-2 border-white text-white px-12 py-6 rounded-full text-xl font-bold hover:bg-white hover:text-blue-600 transition-all duration-300">
-                📱 Descargar App
+              <button 
+                onClick={() => setShowLogin(true)}
+                className="w-full md:w-auto border-2 border-white text-white px-12 py-6 rounded-full text-xl font-bold hover:bg-white hover:text-blue-600 transition-all duration-300"
+              >
+                🔐 Iniciar Sesión
               </button>
             </div>
 
