@@ -299,20 +299,15 @@ async def get_user_profile(current_user: User = Depends(get_current_user)):
 
 @api_router.get("/users/{user_id}/balance")
 async def get_user_balance(user_id: str, current_user: User = Depends(get_current_user)):
-    """Get user balance from Moov"""
+    """Get user balance"""
     if current_user.id != user_id:
         raise HTTPException(status_code=403, detail="Access denied")
     
-    if current_user.moov_account_id:
-        balance = await get_moov_balance(current_user.moov_account_id)
-        # Update local balance
-        await db.users.update_one(
-            {"id": user_id},
-            {"$set": {"balance": balance}}
-        )
-        return {"balance": balance}
+    # Return the current user's balance from database
+    # This is the authoritative source for DalePay balance
+    current_balance = current_user.balance or 0.0
     
-    return {"balance": 0.0}
+    return {"balance": current_balance}
 
 @api_router.post("/transfers")
 async def create_transfer(transfer_data: dict, current_user: User = Depends(get_current_user)):
