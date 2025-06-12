@@ -77,7 +77,7 @@ function App() {
   }
 
   if (!isAuthenticated) {
-    return <Homepage />;
+    return <Homepage onShowLogin={handleLogin} />;
   }
 
   const BottomNavigation = () => (
