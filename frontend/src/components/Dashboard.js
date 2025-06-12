@@ -14,12 +14,14 @@ const Dashboard = ({ user, onNavigate }) => {
 
   const fetchUserData = async () => {
     try {
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || import.meta.env.REACT_APP_BACKEND_URL;
+      
       // Fetch balance
-      const balanceResponse = await axios.get(`/users/${user.id}/balance`);
+      const balanceResponse = await axios.get(`${backendUrl}/api/users/${user.id}/balance`);
       setBalance(balanceResponse.data.balance);
 
       // Fetch recent transfers
-      const transfersResponse = await axios.get('/transfers');
+      const transfersResponse = await axios.get(`${backendUrl}/api/transfers`);
       setRecentTransfers(transfersResponse.data.slice(0, 5));
     } catch (error) {
       console.error('Error fetching user data:', error);
