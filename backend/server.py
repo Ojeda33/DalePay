@@ -507,7 +507,7 @@ async def remove_card(card_id: str, current_user: User = Depends(get_current_use
 
 @api_router.post("/fund-account")
 async def fund_account(fund_data: dict, current_user: User = Depends(get_current_user)):
-    """Fund account using card - FREE with no fees"""
+    """Fund account using card - FREE with REAL card balance checking"""
     try:
         amount = float(fund_data["amount"])
         card_id = fund_data["card_id"]
@@ -524,31 +524,32 @@ async def fund_account(fund_data: dict, current_user: User = Depends(get_current
         if not card:
             raise HTTPException(status_code=404, detail="Card not found")
         
+        # CHECK REAL CARD BALANCE
+        available_balance = await get_real_card_balance(card)
+        
+        if amount > available_balance:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Insufficient funds. Available: ${available_balance:.2f}, Requested: ${amount:.2f}"
+            )
+        
         # NO FEES for adding money - FREE loading!
         fee = 0.0
         net_amount = amount  # Full amount goes to user
         
-        # Simulate card processing - check for insufficient funds
-        card_last4 = card["card_number_last4"]
-        
-        # Simulate card balance checking and different scenarios
-        if card_last4 == "0000":
-            raise HTTPException(status_code=400, detail="Insufficient funds on card. Available: $25.00")
-        elif card_last4 == "1111":
-            raise HTTPException(status_code=400, detail="Card declined by issuer")
-        elif card_last4 == "2222":
-            raise HTTPException(status_code=400, detail="Card expired")
-        
-        # Simulate card available balance (in real app, this would come from card processor)
-        available_balance = 5000.00  # Simulate card has $5000 available
-        if amount > available_balance:
-            raise HTTPException(
-                status_code=400, 
-                detail=f"Insufficient funds on card. Available: ${available_balance:,.2f}, Requested: ${amount:,.2f}"
-            )
-        
-        # Simulate successful payment processing
-        transaction_id = str(uuid.uuid4())
+        # Process REAL payment through Moov (if configured)
+        if MOOV_SECRET_KEY and current_user.moov_account_id:
+            try:
+                payment_result = await process_real_card_payment(card, amount)
+                transaction_id = payment_result["transfer_id"]
+                remaining_balance = payment_result["available_balance"]
+            except Exception as e:
+                logger.error(f"Real payment processing failed: {e}")
+                raise HTTPException(status_code=400, detail=str(e))
+        else:
+            # Fallback simulation for testing
+            transaction_id = str(uuid.uuid4())
+            remaining_balance = available_balance - amount
         
         # Update user balance - ADD THE FULL AMOUNT (no fees)
         current_balance = current_user.balance or 0.0
@@ -568,10 +569,11 @@ async def fund_account(fund_data: dict, current_user: User = Depends(get_current
             "fee": fee,  # $0.00 fee
             "net_amount": net_amount,
             "card_id": card_id,
-            "card_last4": card_last4,
+            "card_last4": card["card_number_last4"],
             "status": "completed",
             "created_at": datetime.utcnow(),
-            "description": f"Added money via {card['card_type']} •••• {card_last4} - FREE LOADING"
+            "description": f"Added money via {card['card_type']} •••• {card['card_number_last4']} - FREE LOADING",
+            "real_payment": bool(MOOV_SECRET_KEY and current_user.moov_account_id)
         }
         
         await db.transactions.insert_one(transaction)
@@ -583,7 +585,8 @@ async def fund_account(fund_data: dict, current_user: User = Depends(get_current
             "fee": fee,  # $0.00
             "net_amount": net_amount,
             "new_balance": new_balance,
-            "card_available_balance": available_balance
+            "card_available_balance": remaining_balance,
+            "real_payment_processed": bool(MOOV_SECRET_KEY and current_user.moov_account_id)
         }
         
     except ValueError:
