@@ -279,7 +279,16 @@ const BusinessDashboard = ({ business, user, onBack }) => {
                     </button>
                   ) : (
                     <button 
-                      onClick={() => setupIntegration(integration.id)}
+                      onClick={() => {
+                        if (integration.id === 'ath_movil') {
+                          const phone = prompt("Ingresa tu número de ATH Móvil (ej: 787-123-4567):");
+                          if (phone) {
+                            setupIntegration(integration.id, { phone_number: phone });
+                          }
+                        } else {
+                          setupIntegration(integration.id);
+                        }
+                      }}
                       disabled={loading}
                       className="bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-medium disabled:bg-gray-300"
                     >
