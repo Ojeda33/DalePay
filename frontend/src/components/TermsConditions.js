@@ -1,11 +1,24 @@
 import React from 'react';
 
-const TermsConditions = () => {
+const TermsConditions = ({ onBack }) => {
   return (
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-red-600 rounded-2xl p-6 text-white mb-6">
+          <div className="flex items-center justify-between mb-4">
+            {onBack && (
+              <button
+                onClick={onBack}
+                className="p-2 rounded-lg hover:bg-white/20 transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+            )}
+            <div className="flex-1"></div>
+          </div>
           <div className="text-center">
             <div className="w-16 h-16 bg-white rounded-full mx-auto mb-4 flex items-center justify-center">
               <span className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-red-600">
