@@ -41,10 +41,10 @@ const CryptoWallet = ({ user, onBack }) => {
         <div className="text-center">
           <p className="text-orange-100 text-sm mb-1">Portfolio Total</p>
           <h2 className="text-3xl font-bold mb-2">
-            {formatCurrency(calculatePortfolioValue())}
+            {formatCurrency(0.00)}
           </h2>
           <p className="text-orange-100 text-sm">
-            +$12.34 (+2.1%) hoy
+            Sin integraciones crypto activas
           </p>
         </div>
       </div>
