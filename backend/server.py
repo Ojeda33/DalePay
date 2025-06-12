@@ -16,7 +16,7 @@ import hmac
 import jwt
 import httpx
 import asyncio
-import plaid
+
 from passlib.context import CryptContext
 from passlib.hash import bcrypt
 from bson import ObjectId
