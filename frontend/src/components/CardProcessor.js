@@ -446,6 +446,11 @@ const CardProcessor = ({ user, onBack, onBalanceUpdate }) => {
                   ✅ Recibirás: ${parseFloat(fundAmount).toFixed(2)}
                 </p>
                 <p className="text-green-600 text-sm">Fee: $0.00 - ¡TOTALMENTE GRATIS!</p>
+                {selectedCard && (
+                  <p className="text-blue-600 text-sm">
+                    💳 Disponible: ${(cardBalances[selectedCard.id] || 0).toFixed(2)}
+                  </p>
+                )}
               </div>
             )}
           </div>
