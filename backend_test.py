@@ -178,7 +178,7 @@ def run_tests():
     email = "test@dalepay.com"
     password = "testpass123"
     
-    print("\n🚀 Starting DalePay FREE Money Loading Tests\n")
+    print("\n🔥 Starting DalePay REAL Money Integration Tests\n")
     print("🔑 Testing with credentials:")
     print(f"   Email: {email}")
     print(f"   Password: {password}")
@@ -204,130 +204,111 @@ def run_tests():
     # Get existing cards
     success, cards = tester.get_cards()
     
-    # If no cards exist, add a test card
-    if not success or len(cards) == 0:
-        print("No cards found, adding a test card...")
-        test_card = {
-            "card_number": "4242424242424242",  # Visa
-            "card_type": "Visa",
-            "expiry_month": 12,
-            "expiry_year": 2030,
-            "cvv": "123",
-            "cardholder_name": "Test User"
-        }
-        tester.add_card(test_card)
-        success, cards = tester.get_cards()
+    # Add a card ending in 1234 (should have $31 balance)
+    print("Adding a test card ending in 1234 (should have $31 balance)...")
+    test_card_1234 = {
+        "card_number": "4242424242421234",  # Card ending in 1234 with $31 balance
+        "card_type": "Visa",
+        "expiry_month": 12,
+        "expiry_year": 2030,
+        "cvv": "123",
+        "cardholder_name": "Test User"
+    }
+    tester.add_card(test_card_1234)
     
-    # Test FREE money loading with different amounts
-    test_amounts = [20, 50, 100]
+    # Get updated cards list
+    success, cards = tester.get_cards()
     
-    print("\n🔍 TESTING FREE MONEY LOADING\n")
+    # Find the card ending in 1234
+    card_1234 = None
+    for card in cards:
+        if card['card_number_last4'] == '1234':
+            card_1234 = card
+            break
     
-    if len(tester.card_ids) > 0 or (success and len(cards) > 0):
-        card_id = tester.card_ids[0] if tester.card_ids else cards[0]['id']
-        
-        for amount in test_amounts:
-            print(f"\n🔍 Testing money loading with ${amount}...")
-            success, fund_response = tester.fund_account(card_id, amount)
-            
-            if success:
-                # Verify fee is zero
-                fee = fund_response.get('fee', None)
-                if fee is not None:
-                    if fee == 0:
-                        print("✅ Fee is correctly set to $0.00 (FREE)")
-                    else:
-                        print(f"❌ Fee should be $0.00 but got ${fee}")
-                
-                # Verify net amount equals amount (no fee deduction)
-                net_amount = fund_response.get('net_amount', None)
-                if net_amount is not None:
-                    if net_amount == amount:
-                        print(f"✅ Net amount (${net_amount}) equals requested amount (no fee deduction)")
-                    else:
-                        print(f"❌ Net amount should equal requested amount but got ${net_amount}")
-                
-                # Verify success message includes FREE/GRATIS wording
-                message = fund_response.get('message', '')
-                if 'FREE' in message or 'GRATIS' in message or 'NO FEES' in message:
-                    print("✅ Success message includes FREE/GRATIS wording")
-                    print(f"   Message: {message}")
-                else:
-                    print("❌ Success message should mention FREE/GRATIS")
-                    print(f"   Message: {message}")
-                
-                # Check if balance increased by the exact amount
-                time.sleep(1)  # Wait for balance to update
-                success, new_balance_data = tester.get_user_balance()
-                if success:
-                    new_balance = new_balance_data.get('balance', 0)
-                    expected_balance = initial_balance + amount
-                    
-                    print(f"New balance: ${new_balance}, Expected: ${expected_balance}")
-                    if abs(new_balance - expected_balance) < 0.01:
-                        print("✅ Balance increased by the FULL amount (no fee deduction)")
-                    else:
-                        print(f"❌ Balance did not increase as expected. Expected ${expected_balance}, got ${new_balance}")
-                    
-                    # Update initial balance for next test
-                    initial_balance = new_balance
-            else:
-                print(f"❌ Failed to fund account with ${amount}")
-    else:
-        print("❌ No cards available for testing")
+    if not card_1234:
+        print("❌ Failed to find card ending in 1234")
+        return False
     
-    # Test error cases with special card numbers
-    print("\n🔍 TESTING ERROR HANDLING\n")
+    print(f"✅ Found card ending in 1234 with ID: {card_1234['id']}")
     
-    error_cards = [
-        {
-            "card_number": "4000000000000000",  # Card ending in 0000 - insufficient funds
-            "card_type": "Visa",
-            "expiry_month": 12,
-            "expiry_year": 2030,
-            "cvv": "123",
-            "cardholder_name": "Test User"
-        },
-        {
-            "card_number": "4000000000001111",  # Card ending in 1111 - declined by issuer
-            "card_type": "Visa",
-            "expiry_month": 12,
-            "expiry_year": 2030,
-            "cvv": "123",
-            "cardholder_name": "Test User"
-        },
-        {
-            "card_number": "4000000000002222",  # Card ending in 2222 - expired
-            "card_type": "Visa",
-            "expiry_month": 12,
-            "expiry_year": 2030,
-            "cvv": "123",
-            "cardholder_name": "Test User"
-        }
-    ]
+    print("\n🔍 TESTING REAL MONEY INTEGRATION\n")
     
-    # Add error cards
-    for card_data in error_cards:
-        tester.add_card(card_data)
+    # Test 1: Try to fund $50 (should fail - insufficient funds)
+    print("\n🔍 Test 1: Funding $50 (should fail - insufficient funds)...")
+    success, fund_response = tester.fund_account(card_1234['id'], 50)
     
-    # Test funding with error cards
-    for i, card_id in enumerate(tester.card_ids[-3:]):
-        print(f"\nTesting error card {i+1} (ending in {error_cards[i]['card_number'][-4:]})...")
-        success, response = tester.fund_account(card_id, 50)
-        # These should fail, so success should be False
-        if not success:
-            print("✅ Error card correctly rejected")
-            # Check if error message includes available balance for card ending in 0000
-            if error_cards[i]['card_number'].endswith('0000'):
-                error_message = response.get('detail', '')
-                if 'Available:' in error_message:
-                    print("✅ Error message includes available balance information")
-                    print(f"   Message: {error_message}")
-                else:
-                    print("❌ Error message should include available balance information")
-                    print(f"   Message: {error_message}")
+    # This should fail because the card only has $31
+    if not success:
+        print("✅ $50 funding correctly rejected due to insufficient funds")
+        # Check if error message includes available balance
+        error_message = fund_response.get('detail', '')
+        if 'Available: $31.00' in error_message:
+            print("✅ Error message correctly shows $31.00 available balance")
+            print(f"   Message: {error_message}")
         else:
-            print("❌ Error card was not rejected as expected")
+            print("❌ Error message should show $31.00 available balance")
+            print(f"   Message: {error_message}")
+    else:
+        print("❌ $50 funding should have failed but succeeded")
+    
+    # Test 2: Try to fund $10 (should succeed)
+    print("\n🔍 Test 2: Funding $10 (should succeed)...")
+    success, fund_response = tester.fund_account(card_1234['id'], 10)
+    
+    if success:
+        print("✅ $10 funding succeeded")
+        
+        # Verify real payment was processed
+        real_payment = fund_response.get('real_payment_processed', False)
+        if real_payment:
+            print("✅ REAL PAYMENT PROCESSED flag is True")
+        else:
+            print("❌ REAL PAYMENT PROCESSED flag should be True")
+        
+        # Verify card available balance is updated correctly
+        card_available_balance = fund_response.get('card_available_balance', 0)
+        expected_card_balance = 31.00 - 10.00
+        if abs(card_available_balance - expected_card_balance) < 0.01:
+            print(f"✅ Card available balance correctly updated to ${card_available_balance:.2f}")
+        else:
+            print(f"❌ Card available balance should be ${expected_card_balance:.2f}, got ${card_available_balance:.2f}")
+        
+        # Verify user balance is updated correctly
+        time.sleep(1)  # Wait for balance to update
+        success, new_balance_data = tester.get_user_balance()
+        if success:
+            new_balance = new_balance_data.get('balance', 0)
+            expected_balance = initial_balance + 10.00
+            
+            print(f"New balance: ${new_balance}, Expected: ${expected_balance}")
+            if abs(new_balance - expected_balance) < 0.01:
+                print("✅ User balance correctly increased by $10.00")
+            else:
+                print(f"❌ User balance did not increase as expected. Expected ${expected_balance}, got ${new_balance}")
+    else:
+        print("❌ $10 funding failed but should have succeeded")
+    
+    # Test 3: Get transfers to verify transaction was recorded
+    print("\n🔍 Test 3: Checking transfer history...")
+    success, transfers = tester.get_transfers()
+    
+    if success:
+        # Look for the most recent transfer
+        if len(transfers) > 0:
+            latest_transfer = transfers[0]
+            print("✅ Found transfer in history")
+            
+            # Check if it has a Moov transfer ID
+            if 'moov_transfer_id' in latest_transfer and latest_transfer['moov_transfer_id']:
+                print("✅ Transfer has a real Moov transfer ID")
+                print(f"   Moov Transfer ID: {latest_transfer['moov_transfer_id']}")
+            else:
+                print("❌ Transfer should have a real Moov transfer ID")
+        else:
+            print("❌ No transfers found in history")
+    else:
+        print("❌ Failed to get transfer history")
     
     # Print test summary
     print(f"\n📊 Tests passed: {tester.tests_passed}/{tester.tests_run}")
