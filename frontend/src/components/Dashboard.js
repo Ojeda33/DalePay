@@ -6,7 +6,7 @@ const Dashboard = ({ user, onNavigate }) => {
   const [balance, setBalance] = useState(0);
   const [recentTransfers, setRecentTransfers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showJorgeTour, setShowJorgeTour] = useState(false);
+  const [showEnhancedQR, setShowEnhancedQR] = useState(false);
 
   useEffect(() => {
     fetchUserData();
