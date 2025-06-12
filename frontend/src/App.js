@@ -295,6 +295,16 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Jorge Tour Guide */}
+      {showJorgeTour && (
+        <JorgeTourGuide 
+          user={user}
+          currentPage={currentPage}
+          onClose={handleJorgeTourComplete}
+          onNavigate={setCurrentPage}
+        />
+      )}
+
       {/* Top Header */}
       <header className="bg-gradient-to-r from-blue-600 via-purple-600 to-red-600 text-white p-4 shadow-lg">
         <div className="flex items-center justify-between max-w-md mx-auto">
@@ -304,9 +314,21 @@ function App() {
             </div>
             <h1 className="text-xl font-bold">DalePay™</h1>
           </div>
-          <div className="text-right">
-            <p className="text-sm opacity-90">¡Hola, {user?.full_name?.split(' ')[0]}!</p>
-            <p className="text-xs opacity-75">Puerto Rico Digital Wallet</p>
+          <div className="flex items-center space-x-3">
+            {/* Jorge Help Button */}
+            <button 
+              onClick={() => setShowJorgeTour(true)}
+              className="bg-white/20 p-2 rounded-full hover:bg-white/30 transition-colors"
+              title="Ayuda con Jorge"
+            >
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd"/>
+              </svg>
+            </button>
+            <div className="text-right">
+              <p className="text-sm opacity-90">¡Hola, {user?.full_name?.split(' ')[0]}!</p>
+              <p className="text-xs opacity-75">Puerto Rico Digital Wallet</p>
+            </div>
           </div>
         </div>
       </header>
