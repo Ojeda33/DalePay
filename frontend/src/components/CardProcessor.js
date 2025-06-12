@@ -10,7 +10,7 @@ const CardProcessor = ({ user, onBack, onBalanceUpdate }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [fundAmount, setFundAmount] = useState('');
+  const [cardBalances, setCardBalances] = useState({});
 
   const [cardForm, setCardForm] = useState({
     card_number: '',
