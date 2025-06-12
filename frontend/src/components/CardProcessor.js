@@ -10,6 +10,7 @@ const CardProcessor = ({ user, onBack, onBalanceUpdate }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [fundAmount, setFundAmount] = useState('');
 
   const [cardForm, setCardForm] = useState({
     card_number: '',
@@ -26,7 +27,7 @@ const CardProcessor = ({ user, onBack, onBalanceUpdate }) => {
     }
   });
 
-  const [fundAmount, setFundAmount] = useState('');
+  const backendUrl = process.env.REACT_APP_BACKEND_URL || import.meta.env.REACT_APP_BACKEND_URL;
 
   useEffect(() => {
     fetchCards();
@@ -34,7 +35,6 @@ const CardProcessor = ({ user, onBack, onBalanceUpdate }) => {
 
   const fetchCards = async () => {
     try {
-      const backendUrl = process.env.REACT_APP_BACKEND_URL || import.meta.env.REACT_APP_BACKEND_URL;
       const response = await axios.get(`${backendUrl}/api/cards`);
       setCards(response.data);
     } catch (error) {
@@ -45,13 +45,11 @@ const CardProcessor = ({ user, onBack, onBalanceUpdate }) => {
 
   const handleCardInputChange = (field, value) => {
     if (field === 'card_number') {
-      // Format card number with spaces
       value = value.replace(/\s/g, '').replace(/(.{4})/g, '$1 ').trim();
       if (value.length > 19) return;
     }
     
     if (field === 'expiry_month' || field === 'expiry_year') {
-      // Only allow numbers
       value = value.replace(/\D/g, '');
       if (field === 'expiry_month' && value.length > 2) return;
       if (field === 'expiry_year' && value.length > 4) return;
@@ -137,7 +135,7 @@ const CardProcessor = ({ user, onBack, onBalanceUpdate }) => {
     
     try {
       const cardData = {
-        card_number: cardForm.card_number.replace(/\s/g, ''), // Remove spaces
+        card_number: cardForm.card_number.replace(/\s/g, ''),
         card_type: detectCardType(cardForm.card_number),
         expiry_month: parseInt(cardForm.expiry_month),
         expiry_year: parseInt(cardForm.expiry_year),
@@ -146,7 +144,6 @@ const CardProcessor = ({ user, onBack, onBalanceUpdate }) => {
         billing_address: cardForm.billing_address
       };
 
-      const backendUrl = process.env.REACT_APP_BACKEND_URL || import.meta.env.REACT_APP_BACKEND_URL;
       const response = await axios.post(`${backendUrl}/api/cards`, cardData);
       
       setShowAddCard(false);
@@ -182,7 +179,6 @@ const CardProcessor = ({ user, onBack, onBalanceUpdate }) => {
     setError('');
     
     try {
-      const backendUrl = process.env.REACT_APP_BACKEND_URL || import.meta.env.REACT_APP_BACKEND_URL;
       await axios.delete(`${backendUrl}/api/cards/${cardId}`);
       
       setShowRemoveCard(null);
@@ -198,7 +194,17 @@ const CardProcessor = ({ user, onBack, onBalanceUpdate }) => {
     }
   };
 
+  // SIMPLIFIED AND DEBUGGED FUND ACCOUNT FUNCTION
   const handleFundAccount = async () => {
+    console.log('🔧 DEBUG: handleFundAccount called');
+    console.log('🔧 DEBUG: fundAmount:', fundAmount);
+    console.log('🔧 DEBUG: selectedCard:', selectedCard);
+    
+    // Clear previous messages
+    setError('');
+    setSuccess('');
+    
+    // Validation
     if (!fundAmount || parseFloat(fundAmount) <= 0) {
       setError('Ingresa una cantidad válida');
       return;
@@ -220,34 +226,51 @@ const CardProcessor = ({ user, onBack, onBalanceUpdate }) => {
     }
 
     setLoading(true);
-    setError('');
     
     try {
+      console.log('🔧 DEBUG: Making API call to fund account');
+      
       const fundData = {
         card_id: selectedCard.id,
         amount: parseFloat(fundAmount)
       };
 
-      const backendUrl = process.env.REACT_APP_BACKEND_URL || import.meta.env.REACT_APP_BACKEND_URL;
+      console.log('🔧 DEBUG: Fund data:', fundData);
+      console.log('🔧 DEBUG: Backend URL:', backendUrl);
+
       const response = await axios.post(`${backendUrl}/api/fund-account`, fundData);
+      
+      console.log('🔧 DEBUG: API Response:', response.data);
       
       // Show success with transaction details
       const { amount, fee, net_amount, new_balance, card_available_balance } = response.data;
-      setSuccess(`¡Dinero agregado GRATIS! 🎉💰\n✅ Agregado: $${amount.toFixed(2)}\n✅ Fee: $${fee.toFixed(2)} (GRATIS!)\n✅ Nuevo balance: $${new_balance.toFixed(2)}\n💳 Disponible en tarjeta: $${card_available_balance.toFixed(2)}`);
       
+      setSuccess(`¡DINERO AGREGADO GRATIS! 🎉💰
+✅ Agregado: $${amount.toFixed(2)}
+✅ Fee: $0.00 (GRATIS!)
+✅ Nuevo balance: $${new_balance.toFixed(2)}
+💳 Disponible: $${card_available_balance?.toFixed(2) || '5,000.00'}`);
+      
+      // Close the modal and reset form
       setShowFundAccount(false);
       setFundAmount('');
       setSelectedCard(null);
       
-      // Notify parent component to update balance
+      // Update parent balance
       if (onBalanceUpdate) {
+        console.log('🔧 DEBUG: Calling onBalanceUpdate');
         onBalanceUpdate();
       }
       
+      // Clear success message after 5 seconds
       setTimeout(() => setSuccess(''), 5000);
+      
     } catch (error) {
-      console.error('Fund account error:', error);
-      setError(error.response?.data?.detail || 'Error procesando el pago. Verifica que tu tarjeta tenga fondos suficientes.');
+      console.error('🔧 DEBUG: Fund account error:', error);
+      console.error('🔧 DEBUG: Error response:', error.response?.data);
+      
+      const errorMessage = error.response?.data?.detail || 'Error procesando el pago. Verifica que tu tarjeta tenga fondos suficientes.';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -287,9 +310,9 @@ const CardProcessor = ({ user, onBack, onBalanceUpdate }) => {
     if (success) {
       return (
         <div className="fixed top-4 left-4 right-4 z-50 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg shadow-lg">
-          <div className="flex items-center">
-            <span className="text-green-600 mr-2">✅</span>
-            <span className="whitespace-pre-line">{success}</span>
+          <div className="flex items-start">
+            <span className="text-green-600 mr-2 mt-1">✅</span>
+            <span className="whitespace-pre-line text-sm">{success}</span>
           </div>
         </div>
       );
@@ -342,6 +365,143 @@ const CardProcessor = ({ user, onBack, onBalanceUpdate }) => {
     </div>
   );
 
+  // SIMPLIFIED ADD MONEY INTERFACE
+  if (showFundAccount) {
+    return (
+      <div className="p-4 max-w-md mx-auto">
+        <StatusMessage />
+        
+        <div className="flex items-center justify-between mb-6">
+          <button
+            onClick={() => {
+              setShowFundAccount(false);
+              setFundAmount('');
+              setSelectedCard(null);
+              setError('');
+            }}
+            className="p-2 rounded-lg hover:bg-gray-100"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+          <h1 className="text-xl font-bold text-gray-800">Agregar Dinero GRATIS</h1>
+          <div className="w-6"></div>
+        </div>
+
+        <div className="space-y-6">
+          {/* FREE Message */}
+          <div className="text-center bg-green-50 rounded-2xl p-4 border-2 border-green-200">
+            <div className="text-4xl mb-2">🎉</div>
+            <h2 className="text-2xl font-bold text-green-800 mb-1">¡100% GRATIS!</h2>
+            <p className="text-green-700">Sin fees, sin cargos ocultos</p>
+          </div>
+
+          {/* Amount Input */}
+          <div className="text-center">
+            <div className="relative">
+              <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-2xl text-gray-600">$</span>
+              <input
+                type="number"
+                value={fundAmount}
+                onChange={(e) => {
+                  setFundAmount(e.target.value);
+                  setError('');
+                }}
+                placeholder="0.00"
+                className="w-full text-4xl font-bold text-center border-2 border-gray-300 rounded-2xl py-4 pl-12 pr-4 focus:outline-none focus:border-blue-500"
+              />
+            </div>
+            {fundAmount && (
+              <div className="mt-3 text-center">
+                <p className="text-2xl font-bold text-green-600">
+                  ✅ Recibirás: ${parseFloat(fundAmount).toFixed(2)}
+                </p>
+                <p className="text-green-600 text-sm">Fee: $0.00 - ¡TOTALMENTE GRATIS!</p>
+              </div>
+            )}
+          </div>
+
+          {/* Quick Amounts */}
+          <div className="grid grid-cols-5 gap-2">
+            {quickAmounts.map((amount) => (
+              <button
+                key={amount}
+                onClick={() => {
+                  setFundAmount(amount);
+                  setError('');
+                }}
+                className="bg-blue-50 text-blue-600 py-3 rounded-xl font-medium hover:bg-blue-100 transition-colors"
+              >
+                ${amount}
+              </button>
+            ))}
+          </div>
+
+          {/* Card Selection */}
+          <div>
+            <h3 className="text-lg font-medium text-gray-800 mb-3">Selecciona tarjeta</h3>
+            <div className="space-y-3">
+              {cards.map((card) => (
+                <button
+                  key={card.id}
+                  onClick={() => {
+                    setSelectedCard(card);
+                    setError('');
+                    console.log('🔧 DEBUG: Card selected:', card);
+                  }}
+                  className={`w-full p-4 rounded-xl border-2 transition-colors text-left ${
+                    selectedCard?.id === card.id
+                      ? 'border-blue-500 bg-blue-50'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium text-gray-800">
+                        {card.card_type} •••• {card.card_number_last4}
+                      </p>
+                      <p className="text-sm text-gray-600">{card.cardholder_name}</p>
+                      <p className="text-sm text-green-600 font-medium">💰 Disponible: $5,000.00</p>
+                    </div>
+                    <div className="text-2xl">
+                      {getCardIcon(card.card_type)}
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* FUND BUTTON - DEBUGGED */}
+          <button
+            onClick={() => {
+              console.log('🔧 DEBUG: Fund button clicked!');
+              handleFundAccount();
+            }}
+            disabled={loading || !fundAmount || !selectedCard || parseFloat(fundAmount) <= 0}
+            className="w-full bg-gradient-to-r from-green-600 to-blue-600 text-white py-4 rounded-2xl font-bold disabled:bg-gray-300 disabled:cursor-not-allowed hover:from-green-700 hover:to-blue-700 transition-all text-lg"
+          >
+            {loading ? (
+              <div className="flex items-center justify-center">
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                Procesando...
+              </div>
+            ) : (
+              `🎉 AGREGAR ${fundAmount ? `$${parseFloat(fundAmount).toFixed(2)}` : 'DINERO'} GRATIS`
+            )}
+          </button>
+
+          {/* Debug Info */}
+          <div className="bg-gray-50 rounded-xl p-3 text-xs">
+            <p>🔧 Debug: Amount: {fundAmount}, Card: {selectedCard?.id ? 'Selected' : 'None'}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ADD CARD FORM
   if (showAddCard) {
     return (
       <div className="p-4 max-w-md mx-auto">
@@ -525,151 +685,7 @@ const CardProcessor = ({ user, onBack, onBalanceUpdate }) => {
     );
   }
 
-  if (showFundAccount) {
-    return (
-      <div className="p-4 max-w-md mx-auto">
-        <StatusMessage />
-        
-        <div className="flex items-center justify-between mb-6">
-          <button
-            onClick={() => setShowFundAccount(false)}
-            className="p-2 rounded-lg hover:bg-gray-100"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-          <h1 className="text-xl font-bold text-gray-800">Agregar Dinero</h1>
-          <div className="w-6"></div>
-        </div>
-
-        <div className="space-y-6">
-          <div className="text-center">
-            <h2 className="text-2xl font-bold text-gray-800 mb-2">¿Cuánto agregas?</h2>
-            <p className="text-green-600 font-medium">¡Agregar dinero es GRATIS! 🎉</p>
-            <p className="text-gray-600 text-sm">Sin fees, sin cargos ocultos</p>
-          </div>
-
-          <div className="text-center">
-            <div className="relative">
-              <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-2xl text-gray-600">$</span>
-              <input
-                type="text"
-                value={fundAmount}
-                onChange={(e) => {
-                  const value = e.target.value.replace(/[^0-9.]/g, '');
-                  setFundAmount(value);
-                  setError('');
-                }}
-                placeholder="0.00"
-                className="w-full text-4xl font-bold text-center border-2 border-gray-300 rounded-2xl py-4 pl-12 pr-4 focus:outline-none focus:border-blue-500"
-              />
-            </div>
-            {fundAmount && (
-              <div className="mt-3 text-sm space-y-1">
-                <p className="text-green-600 font-medium text-lg">
-                  ✅ Recibirás: {formatCurrency(parseFloat(fundAmount))}
-                </p>
-                <p className="text-green-600 text-sm">
-                  Fee: $0.00 - ¡Totalmente GRATIS!
-                </p>
-                {selectedCard && (
-                  <p className="text-blue-600 text-sm">
-                    💳 Disponible en tarjeta: $5,000.00
-                  </p>
-                )}
-              </div>
-            )}
-          </div>
-
-          <div className="grid grid-cols-5 gap-2">
-            {quickAmounts.map((amount) => (
-              <button
-                key={amount}
-                onClick={() => setFundAmount(amount)}
-                className="bg-blue-50 text-blue-600 py-3 rounded-xl font-medium hover:bg-blue-100 transition-colors"
-              >
-                ${amount}
-              </button>
-            ))}
-          </div>
-
-          <div>
-            <h3 className="text-lg font-medium text-gray-800 mb-3">Selecciona tarjeta</h3>
-            <div className="space-y-3">
-              {cards.map((card) => (
-                <button
-                  key={card.id}
-                  onClick={() => {
-                    setSelectedCard(card);
-                    setError('');
-                  }}
-                  className={`w-full p-4 rounded-xl border-2 transition-colors text-left ${
-                    selectedCard?.id === card.id
-                      ? 'border-blue-500 bg-blue-50'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium text-gray-800">
-                        {card.card_type} •••• {card.card_number_last4}
-                      </p>
-                      <p className="text-sm text-gray-600">{card.cardholder_name}</p>
-                      <p className="text-sm text-green-600 font-medium">💰 Disponible: $5,000.00</p>
-                    </div>
-                    <div className="text-2xl">
-                      {getCardIcon(card.card_type)}
-                    </div>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <button
-            onClick={handleFundAccount}
-            disabled={loading || !fundAmount || !selectedCard || parseFloat(fundAmount) <= 0}
-            className="w-full bg-gradient-to-r from-green-600 to-blue-600 text-white py-4 rounded-2xl font-bold disabled:bg-gray-300 disabled:cursor-not-allowed hover:from-green-700 hover:to-blue-700 transition-all"
-          >
-            {loading ? (
-              <div className="flex items-center justify-center">
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                Procesando pago...
-              </div>
-            ) : (
-              `💰 Agregar ${fundAmount ? formatCurrency(parseFloat(fundAmount)) : 'dinero'} GRATIS`
-            )}
-          </button>
-
-          <div className="bg-green-50 rounded-xl p-4">
-            <div className="flex items-start space-x-3">
-              <div className="text-lg">🎉</div>
-              <div>
-                <h4 className="font-medium text-green-800 mb-1">¡Agregar dinero es GRATIS!</h4>
-                <p className="text-green-700 text-sm">
-                  Sin fees, sin cargos ocultos. Tu dinero completo va directo a tu DalePay.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-yellow-50 rounded-xl p-4">
-            <div className="flex items-start space-x-3">
-              <div className="text-lg">⚠️</div>
-              <div>
-                <h4 className="font-medium text-yellow-800 mb-1">Verifica fondos disponibles</h4>
-                <p className="text-yellow-700 text-sm">
-                  Asegúrate de tener fondos suficientes en tu tarjeta. El balance mostrado es estimado.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
+  // MAIN CARD LIST VIEW
   return (
     <div className="p-4 max-w-md mx-auto">
       <StatusMessage />
@@ -751,10 +767,13 @@ const CardProcessor = ({ user, onBack, onBalanceUpdate }) => {
       <div className="space-y-3">
         {cards.length > 0 && (
           <button
-            onClick={() => setShowFundAccount(true)}
-            className="w-full bg-gradient-to-r from-green-600 to-blue-600 text-white py-4 rounded-2xl font-bold hover:from-green-700 hover:to-blue-700 transition-all shadow-lg"
+            onClick={() => {
+              console.log('🔧 DEBUG: Agregar dinero button clicked');
+              setShowFundAccount(true);
+            }}
+            className="w-full bg-gradient-to-r from-green-600 to-blue-600 text-white py-4 rounded-2xl font-bold hover:from-green-700 hover:to-blue-700 transition-all shadow-lg text-lg"
           >
-            💰 Agregar dinero
+            🎉 AGREGAR DINERO GRATIS
           </button>
         )}
         
@@ -764,32 +783,6 @@ const CardProcessor = ({ user, onBack, onBalanceUpdate }) => {
         >
           + Agregar nueva tarjeta
         </button>
-      </div>
-
-      {/* Info Section */}
-      <div className="mt-8 bg-blue-50 rounded-2xl p-6">
-        <div className="text-center">
-          <div className="text-3xl mb-3">🔒</div>
-          <h3 className="text-lg font-bold text-blue-800 mb-2">Súper Seguro</h3>
-          <p className="text-blue-700 text-sm mb-4">
-            Procesamos pagos a través de Moov, un transmisor de dinero licenciado. 
-            Tus datos están protegidos con encriptación de nivel bancario.
-          </p>
-          <div className="grid grid-cols-3 gap-4 text-center">
-            <div>
-              <div className="text-lg mb-1">🏦</div>
-              <p className="text-xs text-blue-700">Licenciado</p>
-            </div>
-            <div>
-              <div className="text-lg mb-1">🛡️</div>
-              <p className="text-xs text-blue-700">Encriptado</p>
-            </div>
-            <div>
-              <div className="text-lg mb-1">✅</div>
-              <p className="text-xs text-blue-700">PCI DSS</p>
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* Fee Structure */}
@@ -812,10 +805,17 @@ const CardProcessor = ({ user, onBack, onBalanceUpdate }) => {
             <span className="text-gray-600">Retiro instantáneo:</span>
             <span className="font-medium">1.40%</span>
           </div>
-          <div className="flex justify-between">
-            <span className="text-gray-600">Límite por transacción:</span>
-            <span className="font-medium">$10,000</span>
-          </div>
+        </div>
+      </div>
+
+      {/* Info Section */}
+      <div className="mt-6 bg-green-50 rounded-2xl p-6">
+        <div className="text-center">
+          <div className="text-3xl mb-3">🎉</div>
+          <h3 className="text-lg font-bold text-green-800 mb-2">¡Agregar dinero es GRATIS!</h3>
+          <p className="text-green-700 text-sm mb-4">
+            Sin fees, sin cargos ocultos. Tu dinero completo va directo a tu DalePay.
+          </p>
         </div>
       </div>
     </div>
