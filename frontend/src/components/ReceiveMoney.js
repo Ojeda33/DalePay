@@ -322,6 +322,15 @@ const ReceiveMoney = ({ user, onBack }) => {
 
   return (
     <div className="p-4 max-w-md mx-auto">
+      {/* Enhanced QR Code Modal */}
+      {showEnhancedQR && (
+        <EnhancedQRCode 
+          user={user}
+          paymentData={requestAmount ? { amount: requestAmount, description: requestDescription } : null}
+          onClose={() => setShowEnhancedQR(false)}
+        />
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <button
