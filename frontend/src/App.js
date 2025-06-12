@@ -161,7 +161,9 @@ function App() {
             <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
               <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
             </svg>
-            <div className="absolute -top-1 -right-1 w-2 h-2 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full"></div>
+            {hasNotifications.home && (
+              <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></div>
+            )}
           </div>
           <span className="text-xs mt-1 font-medium">Home</span>
         </button>
@@ -178,7 +180,9 @@ function App() {
             <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
               <path d="M21 18v1c0 1.1-.9 2-2 2H5c-1.1 0-2-.9-2-2V5c0-1.1.9-2 2-2h14c1.1 0 2 .9 2 2v1h-9c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h9zm0-2v-8c0-.55-.45-1-1-1h-7v10h7c.55 0 1-.45 1-1zM16 13.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/>
             </svg>
-            <div className="absolute -top-1 -right-1 w-2 h-2 bg-gradient-to-r from-green-400 to-blue-400 rounded-full"></div>
+            {hasNotifications.dashboard && (
+              <div className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-500 rounded-full"></div>
+            )}
           </div>
           <span className="text-xs mt-1 font-medium">Wallet</span>
         </button>
@@ -195,7 +199,9 @@ function App() {
             <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
               <path d="M2,21L23,12L2,3V10L17,12L2,14V21Z" />
             </svg>
-            <div className="absolute -top-1 -right-1 w-2 h-2 bg-gradient-to-r from-red-400 to-orange-400 rounded-full"></div>
+            {hasNotifications.send && (
+              <div className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full"></div>
+            )}
           </div>
           <span className="text-xs mt-1 font-medium">Enviar</span>
         </button>
@@ -212,7 +218,9 @@ function App() {
             <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
               <path d="M22,3L1,12L22,21V14L7,12L22,10V3Z" />
             </svg>
-            <div className="absolute -top-1 -right-1 w-2 h-2 bg-gradient-to-r from-green-400 to-teal-400 rounded-full"></div>
+            {hasNotifications.receive && (
+              <div className="absolute -top-1 -right-1 w-2 h-2 bg-blue-500 rounded-full"></div>
+            )}
           </div>
           <span className="text-xs mt-1 font-medium">Recibir</span>
         </button>
@@ -229,7 +237,9 @@ function App() {
             <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
               <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M12,6A6,6 0 0,0 6,12A6,6 0 0,0 12,18A6,6 0 0,0 18,12A6,6 0 0,0 12,6M12,8A4,4 0 0,1 16,12A4,4 0 0,1 12,16A4,4 0 0,1 8,12A4,4 0 0,1 12,8Z" />
             </svg>
-            <div className="absolute -top-1 -right-1 w-2 h-2 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-full"></div>
+            {hasNotifications.crypto && (
+              <div className="absolute -top-1 -right-1 w-2 h-2 bg-orange-500 rounded-full"></div>
+            )}
           </div>
           <span className="text-xs mt-1 font-medium">Crypto</span>
         </button>
@@ -246,7 +256,9 @@ function App() {
             <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
               <path d="M12,15.5A3.5,3.5 0 0,1 8.5,12A3.5,3.5 0 0,1 12,8.5A3.5,3.5 0 0,1 15.5,12A3.5,3.5 0 0,1 12,15.5M19.43,12.98C19.47,12.66 19.5,12.34 19.5,12C19.5,11.66 19.47,11.34 19.43,11.02L21.54,9.37C21.73,9.22 21.78,8.95 21.66,8.73L19.66,5.27C19.54,5.05 19.27,4.96 19.05,5.05L16.56,6.05C16.04,5.65 15.48,5.32 14.87,5.07L14.5,2.42C14.46,2.18 14.25,2 14,2H10C9.75,2 9.54,2.18 9.5,2.42L9.13,5.07C8.52,5.32 7.96,5.66 7.44,6.05L4.95,5.05C4.73,4.96 4.46,5.05 4.34,5.27L2.34,8.73C2.22,8.95 2.27,9.22 2.46,9.37L4.57,11.02C4.53,11.34 4.5,11.67 4.5,12C4.5,12.33 4.53,12.66 4.57,12.98L2.46,14.63C2.27,14.78 2.22,15.05 2.34,15.27L4.34,18.73C4.46,18.95 4.73,19.03 4.95,18.95L7.44,17.94C7.96,18.34 8.52,18.68 9.13,18.93L9.5,21.58C9.54,21.82 9.75,22 10,22H14C14.25,22 14.46,21.82 14.5,21.58L14.87,18.93C15.48,18.68 16.04,18.34 16.56,17.94L19.05,18.95C19.27,19.03 19.54,18.95 19.66,18.73L21.66,15.27C21.78,15.05 21.73,14.78 21.54,14.63L19.43,12.98Z" />
             </svg>
-            <div className="absolute -top-1 -right-1 w-2 h-2 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full"></div>
+            {hasNotifications.settings && (
+              <div className="absolute -top-1 -right-1 w-2 h-2 bg-purple-500 rounded-full"></div>
+            )}
           </div>
           <span className="text-xs mt-1 font-medium">Config</span>
         </button>
