@@ -395,7 +395,7 @@ async def remove_card(card_id: str, current_user: User = Depends(get_current_use
 
 @api_router.post("/fund-account")
 async def fund_account(fund_data: dict, current_user: User = Depends(get_current_user)):
-    """Fund account using card"""
+    """Fund account using card - FREE with no fees"""
     try:
         amount = float(fund_data["amount"])
         card_id = fund_data["card_id"]
@@ -412,26 +412,33 @@ async def fund_account(fund_data: dict, current_user: User = Depends(get_current
         if not card:
             raise HTTPException(status_code=404, detail="Card not found")
         
-        # Process card payment (2.9% fee)
-        fee = amount * 0.029
-        net_amount = amount - fee
+        # NO FEES for adding money - FREE loading!
+        fee = 0.0
+        net_amount = amount  # Full amount goes to user
         
         # Simulate card processing - check for insufficient funds
-        # In a real implementation, you would call Moov or payment processor API
         card_last4 = card["card_number_last4"]
         
-        # Simulate different card behaviors for testing
+        # Simulate card balance checking and different scenarios
         if card_last4 == "0000":
-            raise HTTPException(status_code=400, detail="Insufficient funds on card")
+            raise HTTPException(status_code=400, detail="Insufficient funds on card. Available: $25.00")
         elif card_last4 == "1111":
             raise HTTPException(status_code=400, detail="Card declined by issuer")
         elif card_last4 == "2222":
             raise HTTPException(status_code=400, detail="Card expired")
         
+        # Simulate card available balance (in real app, this would come from card processor)
+        available_balance = 5000.00  # Simulate card has $5000 available
+        if amount > available_balance:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Insufficient funds on card. Available: ${available_balance:,.2f}, Requested: ${amount:,.2f}"
+            )
+        
         # Simulate successful payment processing
         transaction_id = str(uuid.uuid4())
         
-        # Update user balance
+        # Update user balance - ADD THE FULL AMOUNT (no fees)
         current_balance = current_user.balance or 0.0
         new_balance = current_balance + net_amount
         
@@ -446,24 +453,25 @@ async def fund_account(fund_data: dict, current_user: User = Depends(get_current
             "user_id": current_user.id,
             "type": "card_funding",
             "amount": amount,
-            "fee": fee,
+            "fee": fee,  # $0.00 fee
             "net_amount": net_amount,
             "card_id": card_id,
             "card_last4": card_last4,
             "status": "completed",
             "created_at": datetime.utcnow(),
-            "description": f"Added money via {card['card_type']} •••• {card_last4}"
+            "description": f"Added money via {card['card_type']} •••• {card_last4} - FREE LOADING"
         }
         
         await db.transactions.insert_one(transaction)
         
         return {
-            "message": "Account funded successfully",
+            "message": "Money added successfully - NO FEES!",
             "transaction_id": transaction_id,
             "amount": amount,
-            "fee": fee,
+            "fee": fee,  # $0.00
             "net_amount": net_amount,
-            "new_balance": new_balance
+            "new_balance": new_balance,
+            "card_available_balance": available_balance
         }
         
     except ValueError:
