@@ -63,7 +63,7 @@ const ReceiveMoney = ({ user, onBack }) => {
             {/* Real Scannable QR Code */}
             <div className="flex justify-center mb-4">
               <div className="relative">
-                <QRCode
+                <QRCodeCanvas
                   value={paymentURL}
                   size={200}
                   level="H"
