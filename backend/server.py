@@ -821,6 +821,73 @@ async def get_business_integrations(business_id: str, current_user: User = Depen
     
     return business.get("integrations", {})
 
+@api_router.get("/businesses/{business_id}/qr-code")
+async def get_business_qr_code(business_id: str, current_user: User = Depends(get_current_user)):
+    """Get business QR code"""
+    business = await db.businesses.find_one({"id": business_id, "owner_user_id": current_user.id})
+    if not business:
+        raise HTTPException(status_code=404, detail="Business not found")
+    
+    # Generate ATH Móvil QR code data if ATH integration is active
+    ath_integration = business.get("integrations", {}).get("ath_movil")
+    qr_data = {
+        "business_id": business["id"],
+        "business_name": business["name"],
+        "qr_code": business.get("qr_code", f"dalepay://pay/{business['id']}"),
+        "ath_movil": None
+    }
+    
+    if ath_integration and ath_integration.get("status") == "active":
+        # Generate ATH Móvil specific QR code
+        ath_phone = ath_integration.get("phone_number", "787-123-4567")
+        qr_data["ath_movil"] = {
+            "phone_number": ath_phone,
+            "qr_code": f"athmovil://pay?phone={ath_phone.replace('-', '')}&name={business['name']}"
+        }
+    
+    return qr_data
+
+@api_router.get("/businesses/{business_id}/api-key")
+async def get_business_api_key(business_id: str, current_user: User = Depends(get_current_user)):
+    """Get business API key"""
+    business = await db.businesses.find_one({"id": business_id, "owner_user_id": current_user.id})
+    if not business:
+        raise HTTPException(status_code=404, detail="Business not found")
+    
+    return {
+        "api_key": business.get("api_key", "Not generated"),
+        "created_at": business.get("api_created_at"),
+        "usage": {
+            "total_requests": 0,
+            "this_month": 0,
+            "rate_limit": "1000/hour"
+        }
+    }
+
+@api_router.post("/businesses/{business_id}/regenerate-api-key")
+async def regenerate_business_api_key(business_id: str, current_user: User = Depends(get_current_user)):
+    """Regenerate business API key"""
+    business = await db.businesses.find_one({"id": business_id, "owner_user_id": current_user.id})
+    if not business:
+        raise HTTPException(status_code=404, detail="Business not found")
+    
+    # Generate new API key
+    new_api_key = f"dp_{uuid.uuid4().hex[:16]}"
+    
+    await db.businesses.update_one(
+        {"id": business_id},
+        {"$set": {
+            "api_key": new_api_key,
+            "api_created_at": datetime.utcnow()
+        }}
+    )
+    
+    return {
+        "message": "API key regenerated successfully",
+        "api_key": new_api_key,
+        "created_at": datetime.utcnow().isoformat()
+    }
+
 @api_router.post("/businesses/{business_id}/cashout")
 async def business_cashout(
     business_id: str, 
