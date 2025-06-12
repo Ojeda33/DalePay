@@ -454,7 +454,7 @@ async def get_business_details(business_id: str, current_user: User = Depends(ge
     if not business:
         raise HTTPException(status_code=404, detail="Business not found")
     
-    return business
+    return serialize_mongo_doc(business)
 
 @api_router.post("/businesses/{business_id}/integrations")
 async def setup_business_integration(
