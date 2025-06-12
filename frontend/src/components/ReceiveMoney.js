@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import QRCode from 'qrcode.react';
 
 const ReceiveMoney = ({ user, onBack }) => {
   const [activeTab, setActiveTab] = useState('qr');
