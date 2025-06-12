@@ -2,11 +2,36 @@ import React, { useState } from 'react';
 
 const UserSettings = ({ user, onLogout, onBack, onNavigate }) => {
   const [activeTab, setActiveTab] = useState('profile');
+  const [userImage, setUserImage] = useState(null);
   const [notifications, setNotifications] = useState({
     transfers: true,
     marketing: false,
-    security: true
+    security: true,
+    email: true,
+    sms: false,
+    push: true
   });
+  const [privacy, setPrivacy] = useState({
+    profile_visible: true,
+    transaction_history_visible: false,
+    balance_visible: false
+  });
+  const [security, setSecurity] = useState({
+    two_factor: false,
+    biometric: false,
+    login_alerts: true
+  });
+
+  const handleImageUpload = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setUserImage(e.target.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const ProfileTab = () => (
     <div className="space-y-6">
