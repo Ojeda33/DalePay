@@ -28,6 +28,59 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState('dashboard');
+  const [showJorgeTour, setShowJorgeTour] = useState(false);
+  const [hasNotifications, setHasNotifications] = useState({
+    home: false,
+    dashboard: false,
+    send: false,
+    receive: false,
+    crypto: false,
+    settings: false
+  });
+
+  useEffect(() => {
+    checkAuthStatus();
+    // Check for first-time user to show Jorge tour
+    const hasSeenTour = localStorage.getItem('dalepay_tour_completed');
+    if (!hasSeenTour && isAuthenticated) {
+      setTimeout(() => setShowJorgeTour(true), 2000);
+    }
+  }, [isAuthenticated]);
+
+  // Check for notifications (only show when actually needed)
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      checkForNotifications();
+    }
+  }, [isAuthenticated, user]);
+
+  const checkForNotifications = async () => {
+    try {
+      // Only set notifications when there are actual pending items
+      const notifications = {
+        home: false,
+        dashboard: false, // Only show if balance is low or new features
+        send: false,
+        receive: false, // Only show if pending payment requests
+        crypto: false, // Only show if price alerts
+        settings: false // Only show if account needs verification
+      };
+
+      // Check for low balance
+      if (user?.balance < 10) {
+        notifications.dashboard = true;
+      }
+
+      // Check for unverified account
+      if (!user?.phone || !user?.is_verified) {
+        notifications.settings = true;
+      }
+
+      setHasNotifications(notifications);
+    } catch (error) {
+      console.error('Error checking notifications:', error);
+    }
+  };
 
   useEffect(() => {
     checkAuthStatus();
