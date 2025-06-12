@@ -144,7 +144,7 @@ const EnhancedQRCode = ({ user, paymentData, onClose }) => {
             {/* QR Code */}
             <div className="flex justify-center mb-4" ref={qrRef}>
               <div className="relative">
-                <QRCode
+                <QRCodeCanvas
                   value={paymentURL}
                   size={180}
                   level="H"
