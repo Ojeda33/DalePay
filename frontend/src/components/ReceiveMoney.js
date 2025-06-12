@@ -47,37 +47,95 @@ const ReceiveMoney = ({ user, onBack }) => {
 
   const QRCodeTab = () => (
     <div className="text-center space-y-6">
-      <div className="bg-white p-8 rounded-2xl shadow-lg border-2 border-dashed border-blue-300">
-        <div className="w-48 h-48 mx-auto bg-gray-100 rounded-xl flex items-center justify-center mb-4">
-          {/* QR Code Placeholder */}
-          <div className="text-6xl">📱</div>
+      <div className="bg-gradient-to-br from-blue-600 via-purple-600 to-red-600 p-8 rounded-3xl shadow-2xl border-4 border-white">
+        <div className="bg-white p-6 rounded-2xl shadow-lg">
+          <div className="w-48 h-48 mx-auto bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl flex items-center justify-center mb-4 relative overflow-hidden">
+            {/* Unique DalePay QR Code Design */}
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-purple-50"></div>
+            
+            {/* QR Code Grid Pattern */}
+            <div className="relative z-10 grid grid-cols-8 gap-1 w-40 h-40">
+              {Array.from({length: 64}, (_, i) => (
+                <div 
+                  key={i}
+                  className={`w-4 h-4 rounded-sm ${
+                    Math.random() > 0.5 
+                      ? 'bg-gradient-to-br from-blue-600 to-purple-600' 
+                      : 'bg-white'
+                  }`}
+                  style={{
+                    animationDelay: `${Math.random() * 2}s`
+                  }}
+                />
+              ))}
+            </div>
+            
+            {/* Center DalePay Logo */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-red-600 rounded-full flex items-center justify-center shadow-lg">
+                <span className="text-white font-bold text-lg">D</span>
+              </div>
+            </div>
+            
+            {/* Corner indicators */}
+            <div className="absolute top-2 left-2 w-4 h-4 bg-gradient-to-br from-blue-600 to-purple-600 rounded-sm"></div>
+            <div className="absolute top-2 right-2 w-4 h-4 bg-gradient-to-br from-blue-600 to-purple-600 rounded-sm"></div>
+            <div className="absolute bottom-2 left-2 w-4 h-4 bg-gradient-to-br from-blue-600 to-purple-600 rounded-sm"></div>
+            
+            {/* Unique DalePay Pattern */}
+            <div className="absolute bottom-2 right-2 w-6 h-6 grid grid-cols-3 gap-px">
+              <div className="w-full h-full bg-gradient-to-br from-red-500 to-yellow-500 rounded-xs"></div>
+              <div className="w-full h-full bg-gradient-to-br from-yellow-500 to-blue-500 rounded-xs"></div>
+              <div className="w-full h-full bg-gradient-to-br from-blue-500 to-red-500 rounded-xs"></div>
+            </div>
+          </div>
+          
+          <div className="text-center">
+            <h4 className="font-bold text-gray-800 mb-2">Tu código DalePay™</h4>
+            <p className="text-sm text-gray-600 font-mono bg-gray-100 py-1 px-3 rounded-lg">
+              dalepay://pay/{user?.id}
+            </p>
+          </div>
         </div>
-        <p className="text-gray-600 text-sm">
-          Código QR para recibir pagos
-        </p>
+        
+        <div className="mt-4 text-center">
+          <div className="text-white/90 mb-2">
+            <span className="text-2xl">🇵🇷</span> Código único boricua
+          </div>
+          <p className="text-white/80 text-sm">
+            Compatible con cualquier app de cámara
+          </p>
+        </div>
       </div>
 
-      <div className="bg-blue-50 rounded-xl p-4">
-        <div className="flex items-center justify-center space-x-2 text-blue-600 mb-2">
+      <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-xl p-6 border border-green-200">
+        <div className="flex items-center justify-center space-x-2 text-green-600 mb-2">
           <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
             <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
           </svg>
           <span className="font-medium">Instantáneo y seguro</span>
         </div>
-        <p className="text-blue-600 text-sm">
-          Haz que escaneen tu código para enviarte dinero al instante
+        <p className="text-green-700 text-sm text-center">
+          Escanea para enviar dinero real directamente a tu wallet DalePay™
         </p>
       </div>
 
       <div className="space-y-3">
         <button 
-          onClick={() => handleShare('copy')}
-          className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold"
+          onClick={() => {
+            const qrData = `dalepay://pay/${user?.id}?amount=0&description=Pago DalePay`;
+            navigator.clipboard.writeText(qrData);
+            alert('¡Enlace de pago copiado!');
+          }}
+          className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-4 rounded-xl font-bold shadow-lg"
         >
-          {shareMethod === 'copied' ? '¡Copiado!' : 'Compartir enlace de pago'}
+          📋 Copiar enlace de pago
         </button>
         <button className="w-full border-2 border-gray-300 text-gray-700 py-3 rounded-xl font-medium">
-          Guardar código QR
+          💾 Guardar código QR
+        </button>
+        <button className="w-full bg-gradient-to-r from-green-500 to-blue-500 text-white py-3 rounded-xl font-medium">
+          📤 Compartir por WhatsApp
         </button>
       </div>
     </div>
