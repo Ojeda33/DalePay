@@ -1,6 +1,11 @@
 import React, { useEffect, useState, useRef } from 'react';
 
-const Homepage = ({ onLogin }) => {
+const Homepage = ({ onShowLogin }) => {
+  const [showLogin, setShowLogin] = useState(false);
+
+  if (showLogin) {
+    return <LoginSystem onLogin={onShowLogin} onBack={() => setShowLogin(false)} />;
+  }
   const [coins, setCoins] = useState([]);
   const [scrollY, setScrollY] = useState(0);
   const [isVisible, setIsVisible] = useState({});
