@@ -22,11 +22,23 @@ const TermsConditions = () => {
           <div className="space-y-8">
             <section>
               <h2 className="text-2xl font-bold text-gray-800 mb-4">1. Información de la Empresa</h2>
+              <div className="bg-gradient-to-r from-red-50 via-yellow-50 to-blue-50 rounded-xl p-6 mb-4 border border-blue-200">
+                <div className="text-center mb-4">
+                  <div className="text-4xl mb-2">🇵🇷</div>
+                  <h3 className="text-xl font-bold text-blue-800">Propiedad Intelectual Taína</h3>
+                </div>
+                <div className="text-gray-700 space-y-2">
+                  <p><strong>Propietario Intelectual:</strong> Nación Maya-We</p>
+                  <p><strong>Origen:</strong> 100% propiedad y operación Taína</p>
+                  <p><strong>Declaración:</strong> Anunciamos humildemente que DalePay™ es completamente propiedad de taínos y hecho por taínos para el beneficio de nuestra comunidad y el mundo.</p>
+                </div>
+              </div>
               <div className="text-gray-700 space-y-2">
                 <p><strong>Nombre:</strong> DalePay™</p>
                 <p><strong>Tipo:</strong> Plataforma de Wallet Digital y Transferencias</p>
                 <p><strong>Compliance Officer:</strong> AHMET S. OJEDA MERCADO</p>
                 <p><strong>Servicio:</strong> Transferencias de dinero a través de socio licenciado Moov</p>
+                <p><strong>Misión:</strong> Democratizar el acceso financiero para la comunidad puertorriqueña y honrar nuestro legado taíno</p>
               </div>
             </section>
 
