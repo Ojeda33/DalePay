@@ -4,6 +4,8 @@ import axios from 'axios';
 const BusinessPortal = ({ user, onBack }) => {
   const [businesses, setBusinesses] = useState([]);
   const [showCreateBusiness, setShowCreateBusiness] = useState(false);
+  const [showBusinessDashboard, setShowBusinessDashboard] = useState(false);
+  const [selectedBusiness, setSelectedBusiness] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
