@@ -380,30 +380,97 @@ async def get_user_cards(current_user: User = Depends(get_current_user)):
     cards = await db.cards.find({"user_id": current_user.id}).to_list(10)
     return serialize_mongo_doc(cards)
 
-@api_router.post("/fund-account")
-async def fund_account(fund_data: dict, current_user: User = Depends(get_current_user)):
-    """Fund account using card"""
-    amount = float(fund_data["amount"])
-    card_id = fund_data["card_id"]
-    
+@api_router.delete("/cards/{card_id}")
+async def remove_card(card_id: str, current_user: User = Depends(get_current_user)):
+    """Remove a user's card"""
     # Verify card belongs to user
     card = await db.cards.find_one({"id": card_id, "user_id": current_user.id})
     if not card:
         raise HTTPException(status_code=404, detail="Card not found")
     
-    # Process card payment (2.9% fee)
-    fee = amount * 0.029
-    net_amount = amount - fee
+    # Delete the card
+    await db.cards.delete_one({"id": card_id, "user_id": current_user.id})
     
-    # Here you would integrate with Moov API for actual card processing
-    # For now, we'll simulate the funding
-    
-    return {
-        "message": "Account funded successfully",
-        "amount": amount,
-        "fee": fee,
-        "net_amount": net_amount
-    }
+    return {"message": "Card removed successfully"}
+
+@api_router.post("/fund-account")
+async def fund_account(fund_data: dict, current_user: User = Depends(get_current_user)):
+    """Fund account using card"""
+    try:
+        amount = float(fund_data["amount"])
+        card_id = fund_data["card_id"]
+        
+        # Validate amount
+        if amount <= 0:
+            raise HTTPException(status_code=400, detail="Amount must be greater than 0")
+        
+        if amount > 10000:
+            raise HTTPException(status_code=400, detail="Maximum amount per transaction is $10,000")
+        
+        # Verify card belongs to user
+        card = await db.cards.find_one({"id": card_id, "user_id": current_user.id})
+        if not card:
+            raise HTTPException(status_code=404, detail="Card not found")
+        
+        # Process card payment (2.9% fee)
+        fee = amount * 0.029
+        net_amount = amount - fee
+        
+        # Simulate card processing - check for insufficient funds
+        # In a real implementation, you would call Moov or payment processor API
+        card_last4 = card["card_number_last4"]
+        
+        # Simulate different card behaviors for testing
+        if card_last4 == "0000":
+            raise HTTPException(status_code=400, detail="Insufficient funds on card")
+        elif card_last4 == "1111":
+            raise HTTPException(status_code=400, detail="Card declined by issuer")
+        elif card_last4 == "2222":
+            raise HTTPException(status_code=400, detail="Card expired")
+        
+        # Simulate successful payment processing
+        transaction_id = str(uuid.uuid4())
+        
+        # Update user balance
+        current_balance = current_user.balance or 0.0
+        new_balance = current_balance + net_amount
+        
+        await db.users.update_one(
+            {"id": current_user.id},
+            {"$set": {"balance": new_balance}}
+        )
+        
+        # Record the transaction
+        transaction = {
+            "id": transaction_id,
+            "user_id": current_user.id,
+            "type": "card_funding",
+            "amount": amount,
+            "fee": fee,
+            "net_amount": net_amount,
+            "card_id": card_id,
+            "card_last4": card_last4,
+            "status": "completed",
+            "created_at": datetime.utcnow(),
+            "description": f"Added money via {card['card_type']} •••• {card_last4}"
+        }
+        
+        await db.transactions.insert_one(transaction)
+        
+        return {
+            "message": "Account funded successfully",
+            "transaction_id": transaction_id,
+            "amount": amount,
+            "fee": fee,
+            "net_amount": net_amount,
+            "new_balance": new_balance
+        }
+        
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid amount format")
+    except Exception as e:
+        logger.error(f"Fund account error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error processing payment")
 
 @api_router.post("/register-business")
 async def register_business(business_data: dict, current_user: User = Depends(get_current_user)):
