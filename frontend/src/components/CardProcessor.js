@@ -546,7 +546,8 @@ const CardProcessor = ({ user, onBack, onBalanceUpdate }) => {
         <div className="space-y-6">
           <div className="text-center">
             <h2 className="text-2xl font-bold text-gray-800 mb-2">¿Cuánto agregas?</h2>
-            <p className="text-gray-600">Se cobrará un fee de 2.9% + procesamiento</p>
+            <p className="text-green-600 font-medium">¡Agregar dinero es GRATIS! 🎉</p>
+            <p className="text-gray-600 text-sm">Sin fees, sin cargos ocultos</p>
           </div>
 
           <div className="text-center">
@@ -566,15 +567,17 @@ const CardProcessor = ({ user, onBack, onBalanceUpdate }) => {
             </div>
             {fundAmount && (
               <div className="mt-3 text-sm space-y-1">
-                <p className="text-gray-600">
-                  Fee (2.9%): {formatCurrency(parseFloat(fundAmount) * 0.029)}
+                <p className="text-green-600 font-medium text-lg">
+                  ✅ Recibirás: {formatCurrency(parseFloat(fundAmount))}
                 </p>
-                <p className="font-medium text-gray-800">
-                  Total a cobrar: {formatCurrency(parseFloat(fundAmount))}
+                <p className="text-green-600 text-sm">
+                  Fee: $0.00 - ¡Totalmente GRATIS!
                 </p>
-                <p className="text-green-600 font-medium">
-                  Recibirás: {formatCurrency(parseFloat(fundAmount) - (parseFloat(fundAmount) * 0.029))}
-                </p>
+                {selectedCard && (
+                  <p className="text-blue-600 text-sm">
+                    💳 Disponible en tarjeta: $5,000.00
+                  </p>
+                )}
               </div>
             )}
           </div>
