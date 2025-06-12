@@ -303,5 +303,4 @@ class RealBankingService:
             return {"error": "Bank funding failed"}
 
 # Global instance
-real_banking = RealBankingService()</content>
-    </file>
+real_banking = RealBankingService()
