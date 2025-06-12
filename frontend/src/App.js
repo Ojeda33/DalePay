@@ -168,6 +168,8 @@ function App() {
 
   const renderCurrentPage = () => {
     switch(currentPage) {
+      case 'home':
+        return <Homepage onNavigate={setCurrentPage} />;
       case 'dashboard':
         return <Dashboard user={user} onNavigate={setCurrentPage} />;
       case 'send':
@@ -184,6 +186,8 @@ function App() {
         return <AdminDashboard user={user} onBack={() => setCurrentPage('dashboard')} />;
       case 'settings':
         return <UserSettings user={user} onLogout={handleLogout} onBack={() => setCurrentPage('dashboard')} />;
+      case 'terms':
+        return <TermsConditions onBack={() => setCurrentPage('settings')} />;
       default:
         return <Dashboard user={user} onNavigate={setCurrentPage} />;
     }
