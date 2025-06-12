@@ -209,6 +209,122 @@ const BusinessPortal = ({ user, onBack }) => {
                 className="w-full border-2 border-gray-300 rounded-xl py-3 px-4 focus:outline-none focus:border-blue-500"
               />
             </div>
+
+            {/* Business Structure */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Estructura del negocio *
+              </label>
+              <select
+                value={businessForm.business_structure}
+                onChange={(e) => setBusinessForm({...businessForm, business_structure: e.target.value})}
+                className="w-full border-2 border-gray-300 rounded-xl py-3 px-4 focus:outline-none focus:border-blue-500"
+                required
+              >
+                <option value="">Seleccionar estructura</option>
+                <option value="sole_proprietorship">Propietario Único</option>
+                <option value="llc">LLC</option>
+                <option value="corporation">Corporación</option>
+                <option value="partnership">Sociedad</option>
+              </select>
+            </div>
+
+            {/* EIN */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                EIN (Número de Identificación del Empleador)
+              </label>
+              <input
+                type="text"
+                value={businessForm.ein}
+                onChange={(e) => setBusinessForm({...businessForm, ein: e.target.value})}
+                placeholder="12-3456789"
+                className="w-full border-2 border-gray-300 rounded-xl py-3 px-4 focus:outline-none focus:border-blue-500"
+              />
+            </div>
+
+            {/* Business License */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Licencia comercial
+              </label>
+              <input
+                type="text"
+                value={businessForm.business_license}
+                onChange={(e) => setBusinessForm({...businessForm, business_license: e.target.value})}
+                placeholder="Número de licencia"
+                className="w-full border-2 border-gray-300 rounded-xl py-3 px-4 focus:outline-none focus:border-blue-500"
+              />
+            </div>
+
+            {/* Years in Business */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Años en operación
+              </label>
+              <select
+                value={businessForm.years_in_business}
+                onChange={(e) => setBusinessForm({...businessForm, years_in_business: e.target.value})}
+                className="w-full border-2 border-gray-300 rounded-xl py-3 px-4 focus:outline-none focus:border-blue-500"
+              >
+                <option value="">Seleccionar años</option>
+                <option value="0-1">Menos de 1 año</option>
+                <option value="1-2">1-2 años</option>
+                <option value="3-5">3-5 años</option>
+                <option value="5+">Más de 5 años</option>
+              </select>
+            </div>
+
+            {/* Monthly Revenue */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Ingresos mensuales aproximados
+              </label>
+              <select
+                value={businessForm.monthly_revenue}
+                onChange={(e) => setBusinessForm({...businessForm, monthly_revenue: e.target.value})}
+                className="w-full border-2 border-gray-300 rounded-xl py-3 px-4 focus:outline-none focus:border-blue-500"
+              >
+                <option value="">Seleccionar rango</option>
+                <option value="0-1000">$0 - $1,000</option>
+                <option value="1000-5000">$1,000 - $5,000</option>
+                <option value="5000-10000">$5,000 - $10,000</option>
+                <option value="10000+">Más de $10,000</option>
+              </select>
+            </div>
+
+            {/* Owner Information */}
+            <div className="border-t pt-4">
+              <h4 className="font-medium text-gray-800 mb-3">Información del Propietario</h4>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Nombre completo del propietario *
+                </label>
+                <input
+                  type="text"
+                  value={businessForm.owner_name}
+                  onChange={(e) => setBusinessForm({...businessForm, owner_name: e.target.value})}
+                  placeholder="Juan Pérez"
+                  className="w-full border-2 border-gray-300 rounded-xl py-3 px-4 focus:outline-none focus:border-blue-500"
+                  required
+                />
+              </div>
+            </div>
+
+            {/* Bank Account Info */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Cuenta bancaria para depósitos
+              </label>
+              <input
+                type="text"
+                value={businessForm.bank_account}
+                onChange={(e) => setBusinessForm({...businessForm, bank_account: e.target.value})}
+                placeholder="Último 4 dígitos de cuenta bancaria"
+                className="w-full border-2 border-gray-300 rounded-xl py-3 px-4 focus:outline-none focus:border-blue-500"
+              />
+            </div>
           </div>
 
           {error && (
