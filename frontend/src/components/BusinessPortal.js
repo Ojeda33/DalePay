@@ -39,7 +39,7 @@ const BusinessPortal = ({ user, onBack }) => {
 
     setLoading(true);
     try {
-      await axios.post('/register-business', businessForm);
+      const response = await axios.post('/register-business', businessForm);
       setShowCreateBusiness(false);
       setBusinessForm({
         name: '',
@@ -49,9 +49,14 @@ const BusinessPortal = ({ user, onBack }) => {
         phone: '',
         website: ''
       });
-      fetchBusinesses();
+      setError('');
+      await fetchBusinesses();
+      
+      // Show success message
+      alert('¡Negocio registrado exitosamente!');
     } catch (error) {
-      setError(error.response?.data?.detail || 'Error creando negocio');
+      console.error('Business creation error:', error);
+      setError(error.response?.data?.detail || 'Error creando negocio. Inténtalo de nuevo.');
     } finally {
       setLoading(false);
     }
