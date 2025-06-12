@@ -3,13 +3,6 @@ import LoginSystem from './LoginSystem';
 
 const Homepage = ({ onShowLogin }) => {
   const [showLogin, setShowLogin] = useState(false);
-
-  if (showLogin) {
-    return <LoginSystem onLogin={(userData, token) => {
-      onShowLogin(userData, token);
-      setShowLogin(false);
-    }} onBack={() => setShowLogin(false)} />;
-  }
   const [coins, setCoins] = useState([]);
   const [scrollY, setScrollY] = useState(0);
   const [isVisible, setIsVisible] = useState({});
@@ -57,6 +50,13 @@ const Homepage = ({ onShowLogin }) => {
       observer.disconnect();
     };
   }, []);
+
+  if (showLogin) {
+    return <LoginSystem onLogin={(userData, token) => {
+      onShowLogin(userData, token);
+      setShowLogin(false);
+    }} onBack={() => setShowLogin(false)} />;
+  }
 
   const features = [
     {
