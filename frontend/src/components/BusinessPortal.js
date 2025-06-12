@@ -233,6 +233,19 @@ const BusinessPortal = ({ user, onBack }) => {
     );
   }
 
+  if (showBusinessDashboard && selectedBusiness) {
+    return (
+      <BusinessDashboard 
+        business={selectedBusiness} 
+        user={user}
+        onBack={() => {
+          setShowBusinessDashboard(false);
+          setSelectedBusiness(null);
+        }} 
+      />
+    );
+  }
+
   return (
     <div className="p-4 max-w-md mx-auto">
       {/* Header */}
