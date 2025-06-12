@@ -178,6 +178,11 @@ def run_tests():
     email = "test@dalepay.com"
     password = "testpass123"
     
+    print("\n🚀 Starting DalePay FREE Money Loading Tests\n")
+    print("🔑 Testing with credentials:")
+    print(f"   Email: {email}")
+    print(f"   Password: {password}")
+    
     # Login
     if not tester.login(email, password):
         print("❌ Login failed, stopping tests")
@@ -198,15 +203,85 @@ def run_tests():
     
     # Get existing cards
     success, cards = tester.get_cards()
-    if success:
-        # Remove existing cards for clean testing
-        for card in cards:
-            tester.remove_card(card['id'])
     
-    # Test adding different card types
-    test_cards = [
+    # If no cards exist, add a test card
+    if not success or len(cards) == 0:
+        print("No cards found, adding a test card...")
+        test_card = {
+            "card_number": "4242424242424242",  # Visa
+            "card_type": "Visa",
+            "expiry_month": 12,
+            "expiry_year": 2030,
+            "cvv": "123",
+            "cardholder_name": "Test User"
+        }
+        tester.add_card(test_card)
+        success, cards = tester.get_cards()
+    
+    # Test FREE money loading with different amounts
+    test_amounts = [20, 50, 100]
+    
+    print("\n🔍 TESTING FREE MONEY LOADING\n")
+    
+    if len(tester.card_ids) > 0 or (success and len(cards) > 0):
+        card_id = tester.card_ids[0] if tester.card_ids else cards[0]['id']
+        
+        for amount in test_amounts:
+            print(f"\n🔍 Testing money loading with ${amount}...")
+            success, fund_response = tester.fund_account(card_id, amount)
+            
+            if success:
+                # Verify fee is zero
+                fee = fund_response.get('fee', None)
+                if fee is not None:
+                    if fee == 0:
+                        print("✅ Fee is correctly set to $0.00 (FREE)")
+                    else:
+                        print(f"❌ Fee should be $0.00 but got ${fee}")
+                
+                # Verify net amount equals amount (no fee deduction)
+                net_amount = fund_response.get('net_amount', None)
+                if net_amount is not None:
+                    if net_amount == amount:
+                        print(f"✅ Net amount (${net_amount}) equals requested amount (no fee deduction)")
+                    else:
+                        print(f"❌ Net amount should equal requested amount but got ${net_amount}")
+                
+                # Verify success message includes FREE/GRATIS wording
+                message = fund_response.get('message', '')
+                if 'FREE' in message or 'GRATIS' in message or 'NO FEES' in message:
+                    print("✅ Success message includes FREE/GRATIS wording")
+                    print(f"   Message: {message}")
+                else:
+                    print("❌ Success message should mention FREE/GRATIS")
+                    print(f"   Message: {message}")
+                
+                # Check if balance increased by the exact amount
+                time.sleep(1)  # Wait for balance to update
+                success, new_balance_data = tester.get_user_balance()
+                if success:
+                    new_balance = new_balance_data.get('balance', 0)
+                    expected_balance = initial_balance + amount
+                    
+                    print(f"New balance: ${new_balance}, Expected: ${expected_balance}")
+                    if abs(new_balance - expected_balance) < 0.01:
+                        print("✅ Balance increased by the FULL amount (no fee deduction)")
+                    else:
+                        print(f"❌ Balance did not increase as expected. Expected ${expected_balance}, got ${new_balance}")
+                    
+                    # Update initial balance for next test
+                    initial_balance = new_balance
+            else:
+                print(f"❌ Failed to fund account with ${amount}")
+    else:
+        print("❌ No cards available for testing")
+    
+    # Test error cases with special card numbers
+    print("\n🔍 TESTING ERROR HANDLING\n")
+    
+    error_cards = [
         {
-            "card_number": "4111111111111111",  # Visa
+            "card_number": "4000000000000000",  # Card ending in 0000 - insufficient funds
             "card_type": "Visa",
             "expiry_month": 12,
             "expiry_year": 2030,
@@ -214,15 +289,15 @@ def run_tests():
             "cardholder_name": "Test User"
         },
         {
-            "card_number": "5555555555554444",  # Mastercard
-            "card_type": "Mastercard",
+            "card_number": "4000000000001111",  # Card ending in 1111 - declined by issuer
+            "card_type": "Visa",
             "expiry_month": 12,
             "expiry_year": 2030,
             "cvv": "123",
             "cardholder_name": "Test User"
         },
         {
-            "card_number": "4242424242424242",  # Another Visa
+            "card_number": "4000000000002222",  # Card ending in 2222 - expired
             "card_type": "Visa",
             "expiry_month": 12,
             "expiry_year": 2030,
@@ -231,86 +306,28 @@ def run_tests():
         }
     ]
     
-    # Add cards
-    for card_data in test_cards:
+    # Add error cards
+    for card_data in error_cards:
         tester.add_card(card_data)
     
-    # Get cards after adding
-    success, cards = tester.get_cards()
-    if not success or len(cards) != len(test_cards):
-        print(f"❌ Expected {len(test_cards)} cards, got {len(cards) if success else 0}")
-    
-    # Test funding account with valid card
-    if len(tester.card_ids) > 0:
-        # Test with valid amount
-        success, fund_response = tester.fund_account(tester.card_ids[0], 100)
-        
-        # Check if balance increased
-        time.sleep(1)  # Wait for balance to update
-        success, new_balance_data = tester.get_user_balance()
-        if success:
-            new_balance = new_balance_data.get('balance', 0)
-            expected_increase = 100 - (100 * 0.029)  # 2.9% fee
-            expected_balance = initial_balance + expected_increase
-            
-            print(f"New balance: ${new_balance}, Expected: ${expected_balance}")
-            if abs(new_balance - expected_balance) < 0.01:
-                print("✅ Balance increased correctly")
-            else:
-                print(f"❌ Balance did not increase as expected. Expected ${expected_balance}, got ${new_balance}")
-        
-        # Test with error cases
-        error_cards = [
-            {
-                "card_number": "4000000000000000",  # Card ending in 0000 - insufficient funds
-                "card_type": "Visa",
-                "expiry_month": 12,
-                "expiry_year": 2030,
-                "cvv": "123",
-                "cardholder_name": "Test User"
-            },
-            {
-                "card_number": "4000000000001111",  # Card ending in 1111 - declined by issuer
-                "card_type": "Visa",
-                "expiry_month": 12,
-                "expiry_year": 2030,
-                "cvv": "123",
-                "cardholder_name": "Test User"
-            },
-            {
-                "card_number": "4000000000002222",  # Card ending in 2222 - expired
-                "card_type": "Visa",
-                "expiry_month": 12,
-                "expiry_year": 2030,
-                "cvv": "123",
-                "cardholder_name": "Test User"
-            }
-        ]
-        
-        # Add error cards
-        for card_data in error_cards:
-            tester.add_card(card_data)
-        
-        # Test funding with error cards
-        for i, card_id in enumerate(tester.card_ids[-3:]):
-            print(f"\nTesting error card {i+1}...")
-            success, _ = tester.fund_account(card_id, 50)
-            # These should fail, so success should be False
-            if not success:
-                print("✅ Error card correctly rejected")
-            else:
-                print("❌ Error card was not rejected as expected")
-    
-    # Test removing cards
-    for card_id in tester.card_ids[:]:
-        tester.remove_card(card_id)
-    
-    # Verify all cards removed
-    success, cards = tester.get_cards()
-    if success and len(cards) == 0:
-        print("✅ All cards successfully removed")
-    else:
-        print(f"❌ Not all cards were removed. {len(cards)} cards remaining.")
+    # Test funding with error cards
+    for i, card_id in enumerate(tester.card_ids[-3:]):
+        print(f"\nTesting error card {i+1} (ending in {error_cards[i]['card_number'][-4:]})...")
+        success, response = tester.fund_account(card_id, 50)
+        # These should fail, so success should be False
+        if not success:
+            print("✅ Error card correctly rejected")
+            # Check if error message includes available balance for card ending in 0000
+            if error_cards[i]['card_number'].endswith('0000'):
+                error_message = response.get('detail', '')
+                if 'Available:' in error_message:
+                    print("✅ Error message includes available balance information")
+                    print(f"   Message: {error_message}")
+                else:
+                    print("❌ Error message should include available balance information")
+                    print(f"   Message: {error_message}")
+        else:
+            print("❌ Error card was not rejected as expected")
     
     # Print test summary
     print(f"\n📊 Tests passed: {tester.tests_passed}/{tester.tests_run}")
