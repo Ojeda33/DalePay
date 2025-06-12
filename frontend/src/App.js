@@ -290,6 +290,14 @@ function App() {
         />
       )}
 
+      {/* Notification System */}
+      {showNotifications && (
+        <NotificationSystem 
+          user={user}
+          onNotificationsUpdate={handleNotificationsUpdate}
+        />
+      )}
+
       {/* Top Header */}
       <header className="bg-gradient-to-r from-blue-600 via-purple-600 to-red-600 text-white p-4 shadow-lg">
         <div className="flex items-center justify-between max-w-md mx-auto">
@@ -300,6 +308,11 @@ function App() {
             <h1 className="text-xl font-bold">DalePay™</h1>
           </div>
           <div className="flex items-center space-x-3">
+            {/* Notification Bell */}
+            <NotificationBell 
+              notificationCount={Object.values(hasNotifications).filter(Boolean).length}
+              onClick={() => setShowNotifications(true)}
+            />
             {/* Jorge Help Button */}
             <button 
               onClick={() => setShowJorgeTour(true)}
