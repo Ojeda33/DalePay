@@ -52,7 +52,7 @@ const ReceiveMoney = ({ user, onBack }) => {
     const paymentURL = `https://dalepay.app/pay?user=${user?.id}&name=${encodeURIComponent(user?.full_name || 'DalePay User')}`;
     
     return (
-      <div className="text-center space-y-6">
+      <div className="text-center space-y-6 qr-code">
         <div className="bg-gradient-to-br from-blue-600 via-purple-600 to-red-600 p-8 rounded-3xl shadow-2xl border-4 border-white">
           <div className="bg-white p-8 rounded-2xl shadow-lg">
             <div className="mb-4">
@@ -117,13 +117,19 @@ const ReceiveMoney = ({ user, onBack }) => {
           </p>
         </div>
 
-        <div className="space-y-3">
+        <div className="space-y-3 share-buttons">
+          <button 
+            onClick={() => setShowEnhancedQR(true)}
+            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-4 rounded-xl font-bold shadow-lg"
+          >
+            ✨ Abrir QR Avanzado
+          </button>
           <button 
             onClick={() => {
               navigator.clipboard.writeText(paymentURL);
               alert('¡Enlace de pago copiado!');
             }}
-            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-4 rounded-xl font-bold shadow-lg"
+            className="w-full bg-gradient-to-r from-green-500 to-blue-500 text-white py-3 rounded-xl font-medium"
           >
             📋 Copiar enlace de pago
           </button>
