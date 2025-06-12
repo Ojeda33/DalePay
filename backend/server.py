@@ -378,7 +378,7 @@ async def add_card(card_data: dict, current_user: User = Depends(get_current_use
 async def get_user_cards(current_user: User = Depends(get_current_user)):
     """Get user's cards"""
     cards = await db.cards.find({"user_id": current_user.id}).to_list(10)
-    return cards
+    return serialize_mongo_doc(cards)
 
 @api_router.post("/fund-account")
 async def fund_account(fund_data: dict, current_user: User = Depends(get_current_user)):
