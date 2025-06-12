@@ -369,10 +369,25 @@ class DalePayAPITests(unittest.TestCase):
             print(f"❌ Admin login failed (this is expected if admin credentials are different): {data}")
 
 
-if __name__ == "__main__":
+def run_api_tests():
     print("=" * 80)
     print("DalePay API Test Suite")
     print("=" * 80)
     
     # Run the tests
-    unittest.main(argv=['first-arg-is-ignored'], exit=False)
+    test_suite = unittest.TestLoader().loadTestsFromTestCase(DalePayAPITests)
+    test_results = unittest.TextTestRunner(verbosity=2).run(test_suite)
+    
+    # Print summary
+    print("\n" + "=" * 80)
+    print(f"SUMMARY: Ran {test_results.testsRun} tests")
+    print(f"PASSED: {test_results.testsRun - len(test_results.failures) - len(test_results.errors)}")
+    print(f"FAILED: {len(test_results.failures)}")
+    print(f"ERRORS: {len(test_results.errors)}")
+    
+    # Return True if all tests passed
+    return len(test_results.failures) == 0 and len(test_results.errors) == 0
+
+
+if __name__ == "__main__":
+    run_api_tests()
