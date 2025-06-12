@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import EnhancedQRCode from './EnhancedQRCode';
 
 const Dashboard = ({ user, onNavigate }) => {
   const [balance, setBalance] = useState(0);
