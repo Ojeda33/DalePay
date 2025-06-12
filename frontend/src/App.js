@@ -108,6 +108,20 @@ function App() {
         </button>
         
         <button
+          onClick={() => setCurrentPage('dashboard')}
+          className={`flex flex-col items-center py-1 px-3 rounded-lg transition-colors ${
+            currentPage === 'dashboard' 
+              ? 'text-blue-600 bg-blue-50' 
+              : 'text-gray-600'
+          }`}
+        >
+          <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd"/>
+          </svg>
+          <span className="text-xs mt-1">Wallet</span>
+        </button>
+        
+        <button
           onClick={() => setCurrentPage('send')}
           className={`flex flex-col items-center py-1 px-3 rounded-lg transition-colors ${
             currentPage === 'send' 
