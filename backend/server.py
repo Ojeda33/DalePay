@@ -783,14 +783,39 @@ async def setup_business_integration(
     
     integration_type = integration_data["type"]  # uber_eats, doordash, ath_movil
     
-    # Simulate integration setup
-    integration_config = {
-        "type": integration_type,
-        "status": "active",
-        "api_key": f"demo_{integration_type}_{uuid.uuid4().hex[:8]}",
-        "webhook_url": f"https://api.dalepay.com/webhooks/{business_id}/{integration_type}",
-        "created_at": datetime.utcnow().isoformat()
-    }
+    # Create integration configuration based on type
+    if integration_type == "ath_movil":
+        # ATH Móvil requires phone number for QR code
+        phone_number = integration_data.get("phone_number", "787-123-4567")
+        integration_config = {
+            "type": integration_type,
+            "status": "active",
+            "phone_number": phone_number,
+            "business_name": business["name"],
+            "qr_code": f"athmovil://pay?phone={phone_number.replace('-', '')}&name={business['name']}",
+            "webhook_url": f"https://api.dalepay.com/webhooks/{business_id}/{integration_type}",
+            "created_at": datetime.utcnow().isoformat()
+        }
+    elif integration_type in ["uber_eats", "doordash"]:
+        # Delivery platform integrations
+        api_key = f"demo_{integration_type}_{uuid.uuid4().hex[:8]}"
+        integration_config = {
+            "type": integration_type,
+            "status": "active",
+            "api_key": api_key,
+            "webhook_url": f"https://api.dalepay.com/webhooks/{business_id}/{integration_type}",
+            "created_at": datetime.utcnow().isoformat(),
+            "restaurant_id": f"{integration_type}_{business_id[:8]}"
+        }
+    else:
+        # Generic integration
+        integration_config = {
+            "type": integration_type,
+            "status": "active",
+            "api_key": f"demo_{integration_type}_{uuid.uuid4().hex[:8]}",
+            "webhook_url": f"https://api.dalepay.com/webhooks/{business_id}/{integration_type}",
+            "created_at": datetime.utcnow().isoformat()
+        }
     
     # Update business integrations
     current_integrations = business.get("integrations", {})
