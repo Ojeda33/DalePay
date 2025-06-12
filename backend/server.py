@@ -487,15 +487,9 @@ async def create_transfer(transfer_data: dict, current_user: User = Depends(get_
 
 @api_router.get("/transfers")
 async def get_user_transfers(current_user: User = Depends(get_current_user)):
-    """Get user's transfer history"""
-    transfers = await db.transfers.find({
-        "$or": [
-            {"from_user_id": current_user.id},
-            {"to_user_id": current_user.id}
-        ]
-    }).to_list(100)
-    
-    return serialize_mongo_doc(transfers)
+    """Get user's transfer history - Return empty for simulation"""
+    # Return empty array to show no recent activity as requested
+    return []
 
 @api_router.post("/cards")
 async def add_card(card_data: dict, current_user: User = Depends(get_current_user)):
