@@ -480,7 +480,101 @@ async def fund_account(fund_data: dict, current_user: User = Depends(get_current
         logger.error(f"Fund account error: {str(e)}")
         raise HTTPException(status_code=500, detail="Error processing payment")
 
-@api_router.post("/register-business")
+@api_router.post("/cash-out")
+async def cash_out(cash_out_data: dict, current_user: User = Depends(get_current_user)):
+    """Cash out to bank account with 1.40% fee (0.95% to Moov, 0.45% to DalePay)"""
+    try:
+        amount = float(cash_out_data["amount"])
+        is_instant = cash_out_data.get("instant", False)
+        
+        # Validate amount
+        if amount <= 0:
+            raise HTTPException(status_code=400, detail="Amount must be greater than 0")
+        
+        current_balance = current_user.balance or 0.0
+        if amount > current_balance:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Insufficient balance. Available: ${current_balance:.2f}, Requested: ${amount:.2f}"
+            )
+        
+        # Calculate fees
+        if is_instant:
+            # Instant cash out: 1.40% total fee
+            total_fee_rate = 0.014  # 1.40%
+            moov_fee_rate = 0.0095  # 0.95% to Moov
+            dalepay_fee_rate = 0.0045  # 0.45% to DalePay
+        else:
+            # Standard cash out: FREE (1-3 business days)
+            total_fee_rate = 0.0
+            moov_fee_rate = 0.0
+            dalepay_fee_rate = 0.0
+        
+        total_fee = amount * total_fee_rate
+        moov_fee = amount * moov_fee_rate
+        dalepay_fee = amount * dalepay_fee_rate
+        net_amount = amount - total_fee
+        
+        # Simulate cash out processing
+        transaction_id = str(uuid.uuid4())
+        
+        # Update user balance - subtract the full amount
+        new_balance = current_balance - amount
+        
+        await db.users.update_one(
+            {"id": current_user.id},
+            {"$set": {"balance": new_balance}}
+        )
+        
+        # Add DalePay fee to company revenue account (in real app)
+        if dalepay_fee > 0:
+            # This would go to DalePay's revenue account
+            company_revenue = {
+                "id": str(uuid.uuid4()),
+                "type": "cash_out_revenue",
+                "amount": dalepay_fee,
+                "from_transaction_id": transaction_id,
+                "created_at": datetime.utcnow(),
+                "description": f"DalePay revenue from cash out fee - {current_user.full_name}"
+            }
+            await db.company_revenue.insert_one(company_revenue)
+        
+        # Record the transaction
+        transaction = {
+            "id": transaction_id,
+            "user_id": current_user.id,
+            "type": "cash_out",
+            "amount": amount,
+            "total_fee": total_fee,
+            "moov_fee": moov_fee,
+            "dalepay_fee": dalepay_fee,
+            "net_amount": net_amount,
+            "is_instant": is_instant,
+            "status": "processing",
+            "created_at": datetime.utcnow(),
+            "description": f"Cash out ${amount:.2f} - {'Instant' if is_instant else 'Standard'}"
+        }
+        
+        await db.transactions.insert_one(transaction)
+        
+        return {
+            "message": "Cash out initiated successfully",
+            "transaction_id": transaction_id,
+            "amount": amount,
+            "total_fee": total_fee,
+            "moov_fee": moov_fee,
+            "dalepay_fee": dalepay_fee,
+            "net_amount": net_amount,
+            "new_balance": new_balance,
+            "is_instant": is_instant,
+            "estimated_arrival": "Instantly" if is_instant else "1-3 business days"
+        }
+        
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid amount format")
+    except Exception as e:
+        logger.error(f"Cash out error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error processing cash out")
 async def register_business(business_data: dict, current_user: User = Depends(get_current_user)):
     """Register a business"""
     # Create Moov business account if needed
