@@ -438,7 +438,7 @@ async def get_user_profile(current_user: User = Depends(get_current_user)):
 
 @api_router.get("/users/{user_id}/balance")
 async def get_user_balance(user_id: str, current_user: User = Depends(get_current_user)):
-    """Get user balance - REAL balance from DalePay account"""
+    """Get user balance - Should be zero for simulation as requested"""
     if current_user.id != user_id:
         raise HTTPException(status_code=403, detail="Access denied")
     
@@ -447,10 +447,10 @@ async def get_user_balance(user_id: str, current_user: User = Depends(get_curren
     if not fresh_user:
         raise HTTPException(status_code=404, detail="User not found")
     
-    # Return the REAL DalePay balance
-    real_balance = fresh_user.get("balance", 0.0)
+    # Return zero balance for simulation as requested by user
+    simulated_balance = 0.0
     
-    return {"balance": real_balance}
+    return {"balance": simulated_balance}
 
 @api_router.post("/transfers")
 async def create_transfer(transfer_data: dict, current_user: User = Depends(get_current_user)):
