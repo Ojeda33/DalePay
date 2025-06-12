@@ -9,9 +9,9 @@ const CryptoWallet = ({ user, onBack }) => {
   });
 
   const [portfolio, setPortfolio] = useState([
-    { symbol: 'BTC', name: 'Bitcoin', amount: 0.00125, icon: '₿' },
-    { symbol: 'ETH', name: 'Ethereum', amount: 0.0234, icon: 'Ξ' },
-    { symbol: 'USDC', name: 'USD Coin', amount: 150.00, icon: '💰' }
+    { symbol: 'BTC', name: 'Bitcoin', amount: 0.00000, icon: '₿' },
+    { symbol: 'ETH', name: 'Ethereum', amount: 0.0000, icon: 'Ξ' },
+    { symbol: 'USDC', name: 'USD Coin', amount: 0.00, icon: '💰' }
   ]);
 
   const [activeTab, setActiveTab] = useState('portfolio');
