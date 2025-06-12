@@ -17,6 +17,7 @@ import UserSettings from './components/UserSettings';
 import TermsConditions from './components/TermsConditions';
 import JorgeTourGuide from './components/JorgeTourGuide';
 import AppSecurity from './components/AppSecurity';
+import NotificationSystem, { NotificationBell } from './components/NotificationSystem';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
