@@ -76,33 +76,11 @@ const Dashboard = ({ user, onNavigate }) => {
   ];
 
   const JorgeTourGuide = () => (
-    showJorgeTour && (
-      <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl p-6 max-w-md w-full">
-          <div className="text-center">
-            <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full mx-auto mb-4 flex items-center justify-center">
-              <span className="text-2xl">👨‍💼</span>
-            </div>
-            <h3 className="text-xl font-bold text-gray-800 mb-2">
-              ¡Hola! Soy Jorge
-            </h3>
-            <p className="text-gray-600 mb-6">
-              Tu guía personal de DalePay™. ¿Te ayudo a navegar por la app?
-            </p>
-            <div className="space-y-3">
-              <button className="w-full bg-blue-500 text-white py-2 rounded-lg font-medium">
-                Sí, enséñame todo
-              </button>
-              <button 
-                onClick={() => setShowJorgeTour(false)}
-                className="w-full border border-gray-300 text-gray-700 py-2 rounded-lg font-medium"
-              >
-                Ahora no
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+    showEnhancedQR && (
+      <EnhancedQRCode 
+        user={user}
+        onClose={() => setShowEnhancedQR(false)}
+      />
     )
   );
 
