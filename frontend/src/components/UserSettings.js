@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const UserSettings = ({ user, onLogout, onBack }) => {
+const UserSettings = ({ user, onLogout, onBack, onNavigate }) => {
   const [activeTab, setActiveTab] = useState('profile');
   const [notifications, setNotifications] = useState({
     transfers: true,
