@@ -376,14 +376,38 @@ async def fund_account(fund_data: dict, current_user: User = Depends(get_current
 @api_router.post("/register-business")
 async def register_business(business_data: dict, current_user: User = Depends(get_current_user)):
     """Register a business"""
+    # Create Moov business account if needed
+    moov_business_id = await create_moov_business_account(business_data, current_user)
+    
     business = Business(
         name=business_data["name"],
         owner_user_id=current_user.id,
-        business_type=business_data["business_type"]
+        business_type=business_data["business_type"],
+        description=business_data.get("description", ""),
+        address=business_data.get("address", ""),
+        phone=business_data.get("phone", ""),
+        website=business_data.get("website", ""),
+        moov_account_id=moov_business_id,
+        is_approved=True  # Auto-approve for demo
     )
     
-    await db.businesses.insert_one(business.dict())
-    return {"message": "Business registered successfully", "business_id": business.id}
+    # Generate QR code for business
+    business.qr_code = f"dalepay://pay/{business.id}"
+    
+    result = await db.businesses.insert_one(business.dict())
+    
+    return {
+        "message": "Business registered successfully", 
+        "business_id": business.id,
+        "business": business.dict()
+    }
+
+async def create_moov_business_account(business_data: dict, user: User) -> str:
+    """Create a Moov business account"""
+    # For demo purposes, we'll simulate this
+    # In production, this would call the actual Moov API
+    import uuid
+    return f"moov_business_{uuid.uuid4().hex[:8]}"
 
 @api_router.get("/businesses")
 async def get_user_businesses(current_user: User = Depends(get_current_user)):
