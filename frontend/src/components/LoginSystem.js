@@ -78,7 +78,7 @@ const LoginSystem = ({ onLogin, onBack }) => {
             </span>
           </div>
           <h1 className="text-4xl font-bold text-white mb-2">DalePay™</h1>
-          <p className="text-white/90 text-lg">El Cash App de Puerto Rico</p>
+          <p className="text-white/90 text-lg">La Cartera Digital de Puerto Rico</p>
           <p className="text-white/70 text-sm">Transferencias reales • Wallet digital • Crypto</p>
         </div>
 
