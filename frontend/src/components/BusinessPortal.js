@@ -16,7 +16,16 @@ const BusinessPortal = ({ user, onBack }) => {
     description: '',
     address: '',
     phone: '',
-    website: ''
+    website: '',
+    ein: '',
+    business_license: '',
+    years_in_business: '',
+    monthly_revenue: '',
+    bank_account: '',
+    owner_name: '',
+    owner_ssn: '',
+    owner_dob: '',
+    business_structure: '' // LLC, Corporation, Partnership, Sole Proprietorship
   });
 
   useEffect(() => {
