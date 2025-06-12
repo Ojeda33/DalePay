@@ -744,7 +744,7 @@ async def register_business(business_data: dict, current_user: User = Depends(ge
     return {
         "message": "Business registered successfully", 
         "business_id": business.id,
-        "business": business_dict,
+        "business": serialize_mongo_doc(business_dict),
         "api_key": business_api_key
     }
 
