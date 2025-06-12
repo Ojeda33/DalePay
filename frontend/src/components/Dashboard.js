@@ -119,7 +119,7 @@ const Dashboard = ({ user, onNavigate }) => {
       </div>
 
       {/* Balance Card */}
-      <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 mb-6">
+      <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 mb-6 balance-card">
         <div className="text-center">
           <p className="text-gray-600 text-sm mb-1">Balance Disponible</p>
           <h3 className="text-3xl font-bold text-gray-800 mb-2">
@@ -144,7 +144,7 @@ const Dashboard = ({ user, onNavigate }) => {
       </div>
 
       {/* Quick Actions */}
-      <div className="mb-6">
+      <div className="mb-6 quick-actions">
         <h4 className="text-lg font-bold text-gray-800 mb-4">Acciones Rápidas</h4>
         <div className="grid grid-cols-2 gap-4">
           {quickActions.map((action, index) => (
@@ -162,7 +162,7 @@ const Dashboard = ({ user, onNavigate }) => {
       </div>
 
       {/* Recent Activity */}
-      <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 mb-6">
+      <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 mb-6 recent-activity">
         <div className="flex items-center justify-between mb-4">
           <h4 className="text-lg font-bold text-gray-800">Actividad Reciente</h4>
           <button className="text-blue-600 text-sm font-medium">Ver todo</button>
