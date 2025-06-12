@@ -70,8 +70,9 @@ function App() {
     const token = localStorage.getItem('dalepay_token');
     if (token) {
       try {
+        const backendUrl = process.env.REACT_APP_BACKEND_URL || import.meta.env.REACT_APP_BACKEND_URL;
         axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-        const response = await axios.get('/users/me');
+        const response = await axios.get(`${backendUrl}/api/users/me`);
         setUser(response.data);
         setIsAuthenticated(true);
       } catch (error) {
