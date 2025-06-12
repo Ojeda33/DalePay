@@ -108,6 +108,12 @@ function App() {
     axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     setUser(userData);
     setIsAuthenticated(true);
+    
+    // Show Jorge tour for new users
+    const hasSeenTour = localStorage.getItem('dalepay_tour_completed');
+    if (!hasSeenTour) {
+      setTimeout(() => setShowJorgeTour(true), 2000);
+    }
   };
 
   const handleLogout = () => {
@@ -116,6 +122,12 @@ function App() {
     setUser(null);
     setIsAuthenticated(false);
     setCurrentPage('dashboard');
+    setShowJorgeTour(false);
+  };
+
+  const handleJorgeTourComplete = () => {
+    setShowJorgeTour(false);
+    localStorage.setItem('dalepay_tour_completed', 'true');
   };
 
   if (loading) {
