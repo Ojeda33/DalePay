@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import BusinessDashboard from './BusinessDashboard';
 
 const BusinessPortal = ({ user, onBack }) => {
   const [businesses, setBusinesses] = useState([]);
