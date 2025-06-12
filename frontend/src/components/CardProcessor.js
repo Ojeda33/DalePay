@@ -642,13 +642,25 @@ const CardProcessor = ({ user, onBack, onBalanceUpdate }) => {
             )}
           </button>
 
+          <div className="bg-green-50 rounded-xl p-4">
+            <div className="flex items-start space-x-3">
+              <div className="text-lg">🎉</div>
+              <div>
+                <h4 className="font-medium text-green-800 mb-1">¡Agregar dinero es GRATIS!</h4>
+                <p className="text-green-700 text-sm">
+                  Sin fees, sin cargos ocultos. Tu dinero completo va directo a tu DalePay.
+                </p>
+              </div>
+            </div>
+          </div>
+
           <div className="bg-yellow-50 rounded-xl p-4">
             <div className="flex items-start space-x-3">
               <div className="text-lg">⚠️</div>
               <div>
-                <h4 className="font-medium text-yellow-800 mb-1">Nota importante</h4>
+                <h4 className="font-medium text-yellow-800 mb-1">Verifica fondos disponibles</h4>
                 <p className="text-yellow-700 text-sm">
-                  Verifica que tu tarjeta tenga fondos suficientes. Los pagos rechazados pueden generar cargos adicionales de tu banco.
+                  Asegúrate de tener fondos suficientes en tu tarjeta. El balance mostrado es estimado.
                 </p>
               </div>
             </div>
