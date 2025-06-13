@@ -1,5 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import SendMoney from './SendMoney';
+import ReceiveMoney from './ReceiveMoney';
+import TransactionHistory from './TransactionHistory';
+import BankLinking from './BankLinking';
+import RealBanking from './RealBanking';
 
 const Dashboard = ({ user, onNavigate, darkMode }) => {
   const [balance, setBalance] = useState(0);
