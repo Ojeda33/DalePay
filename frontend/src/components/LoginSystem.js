@@ -1,234 +1,538 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
-
-const LoginSystem = ({ onLogin, onBack }) => {
-  const [isLogin, setIsLogin] = useState(true);
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    full_name: '',
-    phone: ''
-  });
+const LoginSystem = ({ onLogin, darkMode }) => {
+  const [isSignUp, setIsSignUp] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [showMFA, setShowMFA] = useState(false);
+  const [mfaCode, setMfaCode] = useState('');
 
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
-    setError('');
-  };
+  // Login form state
+  const [loginForm, setLoginForm] = useState({
+    email: '',
+    password: ''
+  });
 
-  const handleSubmit = async (e) => {
+  // Registration form state
+  const [signUpForm, setSignUpForm] = useState({
+    email: '',
+    password: '',
+    confirmPassword: '',
+    full_name: '',
+    phone: '',
+    date_of_birth: '',
+    ssn_last_4: '',
+    address_line_1: '',
+    address_line_2: '',
+    city: '',
+    state: 'PR',
+    zip_code: '',
+    country: 'US',
+    terms_accepted: false,
+    privacy_accepted: false
+  });
+
+  const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
 
     try {
-      const endpoint = isLogin ? '/auth/login' : '/auth/create-account';
-      const response = await axios.post(`${API}${endpoint}`, formData);
-      
-      if (response.data.access_token) {
+      const response = await axios.post('/auth/login', {
+        email: loginForm.email,
+        password: loginForm.password
+      });
+
+      if (response.data.requires_mfa) {
+        setShowMFA(true);
+      } else {
         onLogin(response.data.user, response.data.access_token);
       }
     } catch (error) {
-      console.error('Auth error:', error);
-      setError(
-        error.response?.data?.detail || 
-        `Error ${isLogin ? 'iniciando sesión' : 'creando cuenta'}. Inténtalo de nuevo.`
-      );
+      setError(error.response?.data?.detail || 'Login failed. Please check your credentials.');
     } finally {
       setLoading(false);
     }
   };
 
-  const toggleMode = () => {
-    setIsLogin(!isLogin);
+  const handleSignUp = async (e) => {
+    e.preventDefault();
+    setLoading(true);
     setError('');
-    setFormData({
-      email: '',
-      password: '',
-      full_name: '',
-      phone: ''
-    });
+
+    // Validation
+    if (signUpForm.password !== signUpForm.confirmPassword) {
+      setError('Passwords do not match');
+      setLoading(false);
+      return;
+    }
+
+    if (!signUpForm.terms_accepted || !signUpForm.privacy_accepted) {
+      setError('Please accept the Terms & Conditions and Privacy Policy');
+      setLoading(false);
+      return;
+    }
+
+    if (signUpForm.ssn_last_4.length !== 4) {
+      setError('Please enter the last 4 digits of your SSN');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const response = await axios.post('/auth/register', signUpForm);
+      
+      setSuccess('Account created successfully! Please log in with your credentials.');
+      setIsSignUp(false);
+      
+      // Auto-login after successful registration
+      setTimeout(() => {
+        onLogin(response.data.user, response.data.access_token);
+      }, 1000);
+
+    } catch (error) {
+      setError(error.response?.data?.detail || 'Registration failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-600 via-purple-600 to-red-600 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        {/* Logo and Header */}
-        <div className="text-center mb-8">
-          {onBack && (
-            <button
-              onClick={onBack}
-              className="absolute top-6 left-6 p-2 rounded-lg hover:bg-white/20 transition-colors text-white"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-          )}
-          <div className="w-20 h-20 bg-white rounded-full mx-auto mb-4 flex items-center justify-center shadow-lg">
-            <span className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-red-600">
-              D
-            </span>
-          </div>
-          <h1 className="text-4xl font-bold text-white mb-2">DalePay™</h1>
-          <p className="text-white/90 text-lg">La Cartera Digital de Puerto Rico</p>
-          <p className="text-white/70 text-sm">Transferencias reales • Wallet digital • Crypto</p>
-        </div>
+  const handleMFAVerification = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
 
-        {/* Login/Register Form */}
-        <div className="bg-white rounded-2xl shadow-2xl p-6 backdrop-blur-sm">
-          <div className="mb-6">
-            <h2 className="text-2xl font-bold text-gray-800 text-center">
-              {isLogin ? '¡Bienvenido de vuelta!' : '¡Únete a DalePay!'}
-            </h2>
-            <p className="text-gray-600 text-center mt-2">
-              {isLogin 
-                ? 'Inicia sesión para acceder a tu wallet' 
-                : 'Crea tu cuenta y recibe tu wallet gratis'
-              }
+    try {
+      const response = await axios.post('/auth/verify-mfa', {
+        email: loginForm.email,
+        mfa_code: mfaCode
+      });
+
+      onLogin(response.data.user, response.data.access_token);
+    } catch (error) {
+      setError('Invalid verification code. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (showMFA) {
+    return (
+      <div className={`max-w-md mx-auto ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+        <div className={`${
+          darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+        } rounded-2xl border shadow-xl p-8`}>
+          <div className="text-center mb-6">
+            <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold mb-2">Two-Factor Authentication</h2>
+            <p className={`${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+              Enter the verification code sent to your phone
             </p>
           </div>
 
+          <form onSubmit={handleMFAVerification}>
+            <div className="mb-6">
+              <input
+                type="text"
+                value={mfaCode}
+                onChange={(e) => setMfaCode(e.target.value)}
+                placeholder="6-digit code"
+                className={`w-full px-4 py-3 rounded-lg border text-center text-2xl tracking-widest ${
+                  darkMode 
+                    ? 'bg-gray-700 border-gray-600 text-white' 
+                    : 'bg-gray-50 border-gray-300 text-gray-900'
+                } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                maxLength="6"
+                required
+              />
+            </div>
+
+            {error && (
+              <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg text-sm">
+                {error}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading || mfaCode.length !== 6}
+              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-lg font-medium hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            >
+              {loading ? 'Verifying...' : 'Verify & Continue'}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setShowMFA(false)}
+              className={`w-full mt-3 ${
+                darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'
+              } py-2 text-sm transition-colors`}
+            >
+              Back to Login
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className={`max-w-md mx-auto ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+      <div className={`${
+        darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+      } rounded-2xl border shadow-xl overflow-hidden`}>
+        {/* Header */}
+        <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-6 text-white text-center">
+          <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span className="text-2xl font-bold">$</span>
+          </div>
+          <h1 className="text-2xl font-bold mb-2">DalePay™</h1>
+          <p className="text-blue-100">FinCEN Licensed Financial Services</p>
+        </div>
+
+        <div className="p-8">
+          {/* Toggle Buttons */}
+          <div className={`flex rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-100'} p-1 mb-6`}>
+            <button
+              onClick={() => setIsSignUp(false)}
+              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                !isSignUp
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : darkMode
+                    ? 'text-gray-300'
+                    : 'text-gray-600'
+              }`}
+            >
+              Sign In
+            </button>
+            <button
+              onClick={() => setIsSignUp(true)}
+              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                isSignUp
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : darkMode
+                    ? 'text-gray-300'
+                    : 'text-gray-600'
+              }`}
+            >
+              Create Account
+            </button>
+          </div>
+
+          {/* Messages */}
           {error && (
-            <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+            <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg text-sm">
               {error}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {!isLogin && (
+          {success && (
+            <div className="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded-lg text-sm">
+              {success}
+            </div>
+          )}
+
+          {/* Login Form */}
+          {!isSignUp && (
+            <form onSubmit={handleLogin} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Nombre Completo
+                <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                  Email Address
+                </label>
+                <input
+                  type="email"
+                  value={loginForm.email}
+                  onChange={(e) => setLoginForm({...loginForm, email: e.target.value})}
+                  className={`w-full px-4 py-3 rounded-lg border ${
+                    darkMode 
+                      ? 'bg-gray-700 border-gray-600 text-white' 
+                      : 'bg-gray-50 border-gray-300 text-gray-900'
+                  } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                  placeholder="Enter your email"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                  Password
+                </label>
+                <input
+                  type="password"
+                  value={loginForm.password}
+                  onChange={(e) => setLoginForm({...loginForm, password: e.target.value})}
+                  className={`w-full px-4 py-3 rounded-lg border ${
+                    darkMode 
+                      ? 'bg-gray-700 border-gray-600 text-white' 
+                      : 'bg-gray-50 border-gray-300 text-gray-900'
+                  } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                  placeholder="Enter your password"
+                  required
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-lg font-medium hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              >
+                {loading ? 'Signing In...' : 'Sign In Securely'}
+              </button>
+            </form>
+          )}
+
+          {/* Registration Form */}
+          {isSignUp && (
+            <form onSubmit={handleSignUp} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                    Full Name *
+                  </label>
+                  <input
+                    type="text"
+                    value={signUpForm.full_name}
+                    onChange={(e) => setSignUpForm({...signUpForm, full_name: e.target.value})}
+                    className={`w-full px-4 py-3 rounded-lg border ${
+                      darkMode 
+                        ? 'bg-gray-700 border-gray-600 text-white' 
+                        : 'bg-gray-50 border-gray-300 text-gray-900'
+                    } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                    placeholder="Your full name"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                    Phone Number *
+                  </label>
+                  <input
+                    type="tel"
+                    value={signUpForm.phone}
+                    onChange={(e) => setSignUpForm({...signUpForm, phone: e.target.value})}
+                    className={`w-full px-4 py-3 rounded-lg border ${
+                      darkMode 
+                        ? 'bg-gray-700 border-gray-600 text-white' 
+                        : 'bg-gray-50 border-gray-300 text-gray-900'
+                    } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                    placeholder="+1 787-XXX-XXXX"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                  Email Address *
+                </label>
+                <input
+                  type="email"
+                  value={signUpForm.email}
+                  onChange={(e) => setSignUpForm({...signUpForm, email: e.target.value})}
+                  className={`w-full px-4 py-3 rounded-lg border ${
+                    darkMode 
+                      ? 'bg-gray-700 border-gray-600 text-white' 
+                      : 'bg-gray-50 border-gray-300 text-gray-900'
+                  } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                  placeholder="Enter your email"
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                    Password *
+                  </label>
+                  <input
+                    type="password"
+                    value={signUpForm.password}
+                    onChange={(e) => setSignUpForm({...signUpForm, password: e.target.value})}
+                    className={`w-full px-4 py-3 rounded-lg border ${
+                      darkMode 
+                        ? 'bg-gray-700 border-gray-600 text-white' 
+                        : 'bg-gray-50 border-gray-300 text-gray-900'
+                    } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                    placeholder="Create password"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                    Confirm Password *
+                  </label>
+                  <input
+                    type="password"
+                    value={signUpForm.confirmPassword}
+                    onChange={(e) => setSignUpForm({...signUpForm, confirmPassword: e.target.value})}
+                    className={`w-full px-4 py-3 rounded-lg border ${
+                      darkMode 
+                        ? 'bg-gray-700 border-gray-600 text-white' 
+                        : 'bg-gray-50 border-gray-300 text-gray-900'
+                    } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                    placeholder="Confirm password"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                    Date of Birth *
+                  </label>
+                  <input
+                    type="date"
+                    value={signUpForm.date_of_birth}
+                    onChange={(e) => setSignUpForm({...signUpForm, date_of_birth: e.target.value})}
+                    className={`w-full px-4 py-3 rounded-lg border ${
+                      darkMode 
+                        ? 'bg-gray-700 border-gray-600 text-white' 
+                        : 'bg-gray-50 border-gray-300 text-gray-900'
+                    } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                    SSN Last 4 Digits *
+                  </label>
+                  <input
+                    type="text"
+                    value={signUpForm.ssn_last_4}
+                    onChange={(e) => setSignUpForm({...signUpForm, ssn_last_4: e.target.value.replace(/\D/g, '')})}
+                    className={`w-full px-4 py-3 rounded-lg border ${
+                      darkMode 
+                        ? 'bg-gray-700 border-gray-600 text-white' 
+                        : 'bg-gray-50 border-gray-300 text-gray-900'
+                    } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                    placeholder="XXXX"
+                    maxLength="4"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                  Address *
                 </label>
                 <input
                   type="text"
-                  name="full_name"
-                  value={formData.full_name}
-                  onChange={handleChange}
-                  required={!isLogin}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Juan Pérez"
+                  value={signUpForm.address_line_1}
+                  onChange={(e) => setSignUpForm({...signUpForm, address_line_1: e.target.value})}
+                  className={`w-full px-4 py-3 rounded-lg border ${
+                    darkMode 
+                      ? 'bg-gray-700 border-gray-600 text-white' 
+                      : 'bg-gray-50 border-gray-300 text-gray-900'
+                  } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                  placeholder="Street address"
+                  required
                 />
               </div>
-            )}
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Correo Electrónico
-              </label>
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                required
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="tu@email.com"
-              />
-            </div>
-
-            {!isLogin && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Teléfono (Opcional)
-                </label>
-                <input
-                  type="tel"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="+1 787-123-4567"
-                />
-              </div>
-            )}
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Contraseña
-              </label>
-              <input
-                type="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                required
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="••••••••"
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? (
-                <div className="flex items-center justify-center">
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                  {isLogin ? 'Iniciando sesión...' : 'Creando cuenta...'}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                    City *
+                  </label>
+                  <input
+                    type="text"
+                    value={signUpForm.city}
+                    onChange={(e) => setSignUpForm({...signUpForm, city: e.target.value})}
+                    className={`w-full px-4 py-3 rounded-lg border ${
+                      darkMode 
+                        ? 'bg-gray-700 border-gray-600 text-white' 
+                        : 'bg-gray-50 border-gray-300 text-gray-900'
+                    } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                    placeholder="San Juan"
+                    required
+                  />
                 </div>
-              ) : (
-                isLogin ? 'Iniciar Sesión' : 'Crear Cuenta'
-              )}
-            </button>
-          </form>
 
-          <div className="mt-6 text-center">
-            <button
-              onClick={toggleMode}
-              className="text-blue-600 hover:text-blue-800 font-medium"
-            >
-              {isLogin 
-                ? '¿No tienes cuenta? Regístrate aquí' 
-                : '¿Ya tienes cuenta? Inicia sesión'
-              }
-            </button>
-          </div>
+                <div>
+                  <label className={`block text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                    ZIP Code *
+                  </label>
+                  <input
+                    type="text"
+                    value={signUpForm.zip_code}
+                    onChange={(e) => setSignUpForm({...signUpForm, zip_code: e.target.value})}
+                    className={`w-full px-4 py-3 rounded-lg border ${
+                      darkMode 
+                        ? 'bg-gray-700 border-gray-600 text-white' 
+                        : 'bg-gray-50 border-gray-300 text-gray-900'
+                    } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                    placeholder="00901"
+                    required
+                  />
+                </div>
+              </div>
 
-          {!isLogin && (
-            <div className="mt-4 text-xs text-gray-600 text-center">
-              Al crear una cuenta, aceptas nuestros{' '}
-              <a href="/terms" className="text-blue-600 hover:underline">
-                Términos y Condiciones
-              </a>
-            </div>
+              {/* Terms and Privacy */}
+              <div className="space-y-3">
+                <label className="flex items-start space-x-3">
+                  <input
+                    type="checkbox"
+                    checked={signUpForm.terms_accepted}
+                    onChange={(e) => setSignUpForm({...signUpForm, terms_accepted: e.target.checked})}
+                    className="mt-1 w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                    required
+                  />
+                  <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                    I accept the <a href="#" className="text-blue-600 hover:underline">Terms & Conditions</a>
+                  </span>
+                </label>
+
+                <label className="flex items-start space-x-3">
+                  <input
+                    type="checkbox"
+                    checked={signUpForm.privacy_accepted}
+                    onChange={(e) => setSignUpForm({...signUpForm, privacy_accepted: e.target.checked})}
+                    className="mt-1 w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                    required
+                  />
+                  <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                    I accept the <a href="#" className="text-blue-600 hover:underline">Privacy Policy</a>
+                  </span>
+                </label>
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-lg font-medium hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              >
+                {loading ? 'Creating Account...' : 'Create Secure Account'}
+              </button>
+            </form>
           )}
-        </div>
 
-        {/* Trust Indicators */}
-        <div className="mt-8 text-center">
-          <div className="flex justify-center items-center space-x-4 text-white/80 text-sm">
-            <div className="flex items-center space-x-1">
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd"/>
+          {/* Security Notice */}
+          <div className={`mt-6 p-4 rounded-lg ${
+            darkMode ? 'bg-gray-700' : 'bg-blue-50'
+          } border border-blue-200`}>
+            <div className="flex items-start space-x-3">
+              <svg className="w-5 h-5 text-blue-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
               </svg>
-              <span>Seguro</span>
-            </div>
-            <div className="flex items-center space-x-1">
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-              </svg>
-              <span>Licenciado</span>
-            </div>
-            <div className="flex items-center space-x-1">
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd"/>
-              </svg>
-              <span>FinCEN</span>
+              <div>
+                <h4 className="text-blue-600 font-medium text-sm">Your Security is Our Priority</h4>
+                <p className={`text-xs mt-1 ${darkMode ? 'text-gray-400' : 'text-blue-600'}`}>
+                  We use 256-bit encryption and are FinCEN licensed for your protection.
+                </p>
+              </div>
             </div>
           </div>
-          <p className="text-white/60 text-xs mt-2">
-            Powered by Moov • Licensed Money Transmitter
-          </p>
         </div>
       </div>
     </div>
