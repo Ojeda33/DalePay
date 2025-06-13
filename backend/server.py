@@ -878,7 +878,8 @@ app.add_middleware(
     allow_origins=[
         "https://dalepay.com",  # Production domain
         "https://app.dalepay.com",  # App subdomain
-        os.environ.get("FRONTEND_URL", "http://localhost:3000")  # Development
+        os.environ.get("FRONTEND_URL", "http://localhost:3000"),  # Development
+        "https://cbc34480-4478-4ec3-b260-5a640bb044d0.preview.emergentagent.com"  # Current frontend URL
     ],
     allow_methods=["GET", "POST", "PUT", "DELETE"],
     allow_headers=["*"],
