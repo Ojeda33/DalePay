@@ -1,306 +1,373 @@
-import os
-import asyncio
-import logging
-from typing import Dict, List, Optional
-import httpx
-from datetime import datetime
+"""
+Real Banking Integration for DalePay
+Handles actual bank account connections and real money transfers
+"""
 
-# REAL PLAID INTEGRATION
-try:
-    from plaid.api import plaid_api
-    from plaid.model.link_token_create_request import LinkTokenCreateRequest
-    from plaid.model.link_token_create_request_user import LinkTokenCreateRequestUser
-    from plaid.model.item_public_token_exchange_request import ItemPublicTokenExchangeRequest
-    from plaid.model.accounts_balance_get_request import AccountsBalanceGetRequest
-    from plaid.model.country_code import CountryCode
-    from plaid.model.products import Products
-    from plaid.configuration import Configuration
-    from plaid.api_client import ApiClient
-    from plaid.exceptions import ApiException
-    PLAID_AVAILABLE = True
-except ImportError:
-    PLAID_AVAILABLE = False
+import os
+import logging
+from typing import List, Dict, Any, Optional
+from datetime import datetime, timedelta
+from decimal import Decimal
+import asyncio
+import json
+
+# Plaid integration for real bank accounts
+from plaid.api import plaid_api
+from plaid.model.transactions_get_request import TransactionsGetRequest
+from plaid.model.accounts_get_request import AccountsGetRequest
+from plaid.model.link_token_create_request import LinkTokenCreateRequest
+from plaid.model.item_public_token_exchange_request import ItemPublicTokenExchangeRequest
+from plaid.model.country_code import CountryCode
+from plaid.model.products import Products
+from plaid.model.link_token_create_request_user import LinkTokenCreateRequestUser
+from plaid.configuration import Configuration
+from plaid.api_client import ApiClient
+
+# Stripe integration for real money transfers
+import stripe
+
+# FastAPI
+from fastapi import HTTPException
+from pydantic import BaseModel
+
+# Local imports
+from cryptography.fernet import Fernet
 
 logger = logging.getLogger(__name__)
 
-# Configuration
-PLAID_CLIENT_ID = os.getenv("PLAID_CLIENT_ID", "")
-PLAID_SECRET = os.getenv("PLAID_SECRET", "")
-PLAID_ENV = os.getenv("PLAID_ENV", "sandbox")
-MOOV_SECRET_KEY = os.getenv("MOOV_SECRET_KEY", "")
-MOOV_ACCOUNT_ID = os.getenv("MOOV_ACCOUNT_ID", "")
-
-# Initialize Plaid client
-plaid_client = None
-if PLAID_AVAILABLE and PLAID_CLIENT_ID and PLAID_SECRET:
-    try:
-        from plaid import Environment
-        
-        env_map = {
-            'sandbox': Environment.sandbox,
-            'development': Environment.development,
-            'production': Environment.production
-        }
-        
-        configuration = Configuration(
-            host=env_map.get(PLAID_ENV, Environment.sandbox),
-            api_key={
-                'clientId': PLAID_CLIENT_ID,
-                'secret': PLAID_SECRET
-            }
-        )
-        api_client = ApiClient(configuration)
-        plaid_client = plaid_api.PlaidApi(api_client)
-        logger.info("Plaid client initialized successfully")
-    except Exception as e:
-        logger.error(f"Failed to initialize Plaid client: {e}")
-        plaid_client = None
-
-class RealBankingService:
-    """REAL banking service for actual money transfers"""
+class RealBankingConfig:
+    """Configuration for real banking APIs"""
     
     def __init__(self):
-        self.plaid = plaid_client
-        self.moov_secret = MOOV_SECRET_KEY
-        self.moov_account_id = MOOV_ACCOUNT_ID
+        # Plaid Configuration
+        self.plaid_client_id = os.getenv('PLAID_CLIENT_ID')
+        self.plaid_secret = os.getenv('PLAID_SECRET')
+        self.plaid_env = os.getenv('PLAID_ENV', 'sandbox')
+        
+        # Stripe Configuration
+        self.stripe_secret_key = os.getenv('STRIPE_SECRET_KEY')
+        stripe.api_key = self.stripe_secret_key
+        
+        # Encryption
+        self.encryption_key = os.getenv('ENCRYPTION_KEY', Fernet.generate_key())
+        self.cipher_suite = Fernet(self.encryption_key.encode() if isinstance(self.encryption_key, str) else self.encryption_key)
+        
+        # Setup Plaid client
+        if self.plaid_client_id and self.plaid_secret:
+            self.setup_plaid_client()
+        else:
+            logger.warning("Plaid credentials not found. Real banking features will be limited.")
+            self.plaid_client = None
     
-    async def create_link_token(self, user_id: str, user_email: str) -> Optional[str]:
-        """Create REAL Plaid link token for bank account linking"""
-        if not self.plaid:
-            logger.error("Plaid not configured - cannot create link token")
-            return None
+    def setup_plaid_client(self):
+        """Initialize Plaid API client"""
+        try:
+            # Map environment string to Plaid environment
+            env_map = {
+                'sandbox': 'https://sandbox.plaid.com',
+                'development': 'https://development.plaid.com',
+                'production': 'https://production.plaid.com'
+            }
             
+            host = env_map.get(self.plaid_env, 'https://sandbox.plaid.com')
+            
+            configuration = Configuration(
+                host=host,
+                api_key={
+                    'clientId': self.plaid_client_id,
+                    'secret': self.plaid_secret,
+                    'plaidVersion': '2020-09-14'
+                }
+            )
+            
+            api_client = ApiClient(configuration)
+            self.plaid_client = plaid_api.PlaidApi(api_client)
+            logger.info(f"Plaid client initialized for {self.plaid_env} environment")
+            
+        except Exception as e:
+            logger.error(f"Failed to initialize Plaid client: {e}")
+            self.plaid_client = None
+
+class BankAccount(BaseModel):
+    account_id: str
+    name: str
+    type: str
+    subtype: str
+    balance_current: float
+    balance_available: Optional[float]
+    currency: str
+    mask: str
+    
+class Transaction(BaseModel):
+    transaction_id: str
+    account_id: str
+    amount: float
+    date: str
+    name: str
+    category: List[str]
+    
+class TransferRequest(BaseModel):
+    from_account_id: str
+    to_account_id: Optional[str] = None
+    to_email: Optional[str] = None
+    amount: float
+    description: str
+
+class RealBankingService:
+    """Service for real banking operations"""
+    
+    def __init__(self, config: RealBankingConfig, db):
+        self.config = config
+        self.db = db
+        
+    def encrypt_token(self, token: str) -> str:
+        """Encrypt sensitive tokens"""
+        return self.config.cipher_suite.encrypt(token.encode()).decode()
+    
+    def decrypt_token(self, encrypted_token: str) -> str:
+        """Decrypt sensitive tokens"""
+        return self.config.cipher_suite.decrypt(encrypted_token.encode()).decode()
+    
+    async def create_link_token(self, user_id: str) -> str:
+        """Create Plaid Link token for account linking"""
+        if not self.config.plaid_client:
+            raise HTTPException(status_code=500, detail="Banking service not available. Please configure Plaid credentials.")
+        
         try:
             request = LinkTokenCreateRequest(
                 products=[Products('auth'), Products('transactions')],
-                client_name="DalePay - La Cartera Digital de Puerto Rico",
-                country_codes=[CountryCode('US'), CountryCode('PR')],
-                language='es',
-                user=LinkTokenCreateRequestUser(client_user_id=user_id),
-                redirect_uri="https://your-app.com/oauth-return"  # Replace with your actual URL
+                client_name="DalePay Banking",
+                country_codes=[CountryCode('US')],
+                language='en',
+                user=LinkTokenCreateRequestUser(client_user_id=user_id)
             )
             
-            response = self.plaid.link_token_create(request)
-            logger.info(f"Created Plaid link token for user {user_id}")
+            response = self.config.plaid_client.link_token_create(request)
             return response['link_token']
             
-        except ApiException as e:
-            logger.error(f"Plaid API error creating link token: {e}")
-            return None
         except Exception as e:
             logger.error(f"Error creating link token: {e}")
-            return None
+            raise HTTPException(status_code=500, detail=f"Failed to create link token: {str(e)}")
     
-    async def exchange_public_token(self, public_token: str) -> Optional[Dict]:
-        """Exchange public token for access token and get account info"""
-        if not self.plaid:
-            logger.error("Plaid not configured - cannot exchange token")
-            return None
-            
+    async def exchange_public_token(self, public_token: str, user_id: str) -> Dict[str, Any]:
+        """Exchange public token for access token and link bank accounts"""
+        if not self.config.plaid_client:
+            raise HTTPException(status_code=500, detail="Banking service not available")
+        
         try:
             # Exchange public token for access token
-            exchange_request = ItemPublicTokenExchangeRequest(public_token=public_token)
-            exchange_response = self.plaid.item_public_token_exchange(exchange_request)
-            access_token = exchange_response['access_token']
-            item_id = exchange_response['item_id']
+            request = ItemPublicTokenExchangeRequest(public_token=public_token)
+            response = self.config.plaid_client.item_public_token_exchange(request)
+            access_token = response['access_token']
             
             # Get account information
-            accounts_request = AccountsBalanceGetRequest(access_token=access_token)
-            accounts_response = self.plaid.accounts_balance_get(accounts_request)
+            accounts_request = AccountsGetRequest(access_token=access_token)
+            accounts_response = self.config.plaid_client.accounts_get(accounts_request)
             
-            result = {
-                'access_token': access_token,
-                'item_id': item_id,
-                'accounts': []
-            }
-            
+            # Store encrypted access token and account info in database
+            linked_accounts = []
             for account in accounts_response['accounts']:
-                account_info = {
-                    'account_id': account['account_id'],
-                    'name': account['name'],
-                    'type': account['type'],
-                    'subtype': account['subtype'],
-                    'mask': account['mask'],
-                    'balance': {
-                        'available': account['balances']['available'],
-                        'current': account['balances']['current']
-                    }
-                }
-                result['accounts'].append(account_info)
-            
-            logger.info(f"Successfully exchanged token and got {len(result['accounts'])} accounts")
-            return result
-            
-        except ApiException as e:
-            logger.error(f"Plaid API error exchanging token: {e}")
-            return None
-        except Exception as e:
-            logger.error(f"Error exchanging token: {e}")
-            return None
-    
-    async def get_real_account_balance(self, access_token: str, account_id: str) -> Optional[float]:
-        """Get REAL account balance from bank via Plaid"""
-        if not self.plaid:
-            logger.error("Plaid not configured - cannot get real balance")
-            return None
-            
-        try:
-            request = AccountsBalanceGetRequest(access_token=access_token)
-            response = self.plaid.accounts_balance_get(request)
-            
-            for account in response['accounts']:
-                if account['account_id'] == account_id:
-                    balance = account['balances']['available'] or account['balances']['current']
-                    logger.info(f"Got real balance ${balance} for account {account_id}")
-                    return float(balance) if balance else 0.0
-            
-            return 0.0
-            
-        except ApiException as e:
-            logger.error(f"Plaid API error getting balance: {e}")
-            return None
-        except Exception as e:
-            logger.error(f"Error getting account balance: {e}")
-            return None
-    
-    async def create_moov_payment_method(self, bank_account_data: Dict) -> Optional[str]:
-        """Create REAL Moov payment method from bank account"""
-        if not self.moov_secret:
-            logger.error("Moov not configured - cannot create payment method")
-            return None
-            
-        try:
-            async with httpx.AsyncClient() as client:
-                headers = {
-                    "Authorization": f"Bearer {self.moov_secret}",
-                    "Content-Type": "application/json"
+                bank_account = {
+                    "user_id": user_id,
+                    "account_id": account['account_id'],
+                    "access_token": self.encrypt_token(access_token),
+                    "account_name": account['name'],
+                    "account_type": account['type'],
+                    "account_subtype": account.get('subtype', ''),
+                    "balance_current": float(account['balances']['current'] or 0),
+                    "balance_available": float(account['balances']['available'] or 0),
+                    "currency": account['balances'].get('iso_currency_code', 'USD'),
+                    "mask": account.get('mask', ''),
+                    "is_active": True,
+                    "linked_at": datetime.utcnow(),
+                    "last_updated": datetime.utcnow()
                 }
                 
-                payment_method_data = {
-                    "bankAccount": {
-                        "routingNumber": bank_account_data['routing_number'],
-                        "accountNumber": bank_account_data['account_number'],
-                        "bankAccountType": "checking",
-                        "holderName": bank_account_data['account_holder_name']
-                    }
-                }
-                
-                response = await client.post(
-                    f"https://api.moov.io/accounts/{bank_account_data['moov_account_id']}/payment-methods",
-                    headers=headers,
-                    json=payment_method_data
+                # Insert or update account in database
+                await self.db.real_bank_accounts.replace_one(
+                    {"user_id": user_id, "account_id": account['account_id']},
+                    bank_account,
+                    upsert=True
                 )
                 
-                if response.status_code == 201:
-                    payment_method = response.json()
-                    logger.info(f"Created Moov payment method: {payment_method['paymentMethodID']}")
-                    return payment_method['paymentMethodID']
-                else:
-                    logger.error(f"Failed to create Moov payment method: {response.status_code} - {response.text}")
-                    return None
-                    
-        except Exception as e:
-            logger.error(f"Error creating Moov payment method: {e}")
-            return None
-    
-    async def transfer_real_money(self, from_account_id: str, to_account_id: str, amount: float, description: str) -> Optional[Dict]:
-        """Transfer REAL money between accounts via Moov"""
-        if not self.moov_secret:
-            logger.error("Moov not configured - cannot transfer real money")
-            return None
-            
-        try:
-            async with httpx.AsyncClient() as client:
-                headers = {
-                    "Authorization": f"Bearer {self.moov_secret}",
-                    "Content-Type": "application/json",
-                    "X-Wait-For": "rail-response"
-                }
-                
-                transfer_data = {
-                    "amount": {
-                        "currency": "USD",
-                        "value": int(amount * 100)  # Convert to cents
-                    },
-                    "source": {
-                        "accountID": from_account_id
-                    },
-                    "destination": {
-                        "accountID": to_account_id
-                    },
-                    "description": description,
-                    "metadata": {
-                        "source": "DalePay",
-                        "transfer_type": "user_to_user"
-                    }
-                }
-                
-                logger.info(f"Initiating REAL money transfer: ${amount} from {from_account_id} to {to_account_id}")
-                
-                response = await client.post(
-                    "https://api.moov.io/transfers",
-                    headers=headers,
-                    json=transfer_data
-                )
-                
-                if response.status_code == 201:
-                    transfer_result = response.json()
-                    logger.info(f"REAL money transfer successful: {transfer_result['transferID']}")
-                    
-                    return {
-                        "transfer_id": transfer_result['transferID'],
-                        "amount": amount,
-                        "status": transfer_result.get('status', 'pending'),
-                        "created_at": transfer_result.get('createdAt'),
-                        "real_transfer": True
-                    }
-                else:
-                    logger.error(f"REAL money transfer failed: {response.status_code} - {response.text}")
-                    return None
-                    
-        except Exception as e:
-            logger.error(f"Error transferring real money: {e}")
-            return None
-    
-    async def fund_from_bank_account(self, bank_access_token: str, bank_account_id: str, 
-                                   moov_account_id: str, amount: float) -> Optional[Dict]:
-        """Fund DalePay account from REAL bank account"""
-        try:
-            # First check real bank balance
-            real_balance = await self.get_real_account_balance(bank_access_token, bank_account_id)
-            
-            if real_balance is None:
-                return {"error": "Could not check bank account balance"}
-            
-            if amount > real_balance:
-                return {
-                    "error": f"Insufficient funds. Available: ${real_balance:.2f}, Requested: ${amount:.2f}"
-                }
-            
-            # Create ACH transfer from bank to Moov account
-            if not self.moov_secret:
-                return {"error": "Payment processing not configured"}
-            
-            # In a real implementation, this would:
-            # 1. Create payment method from bank account
-            # 2. Initiate ACH transfer
-            # 3. Handle transfer status updates
-            
-            # For now, we'll simulate but with real balance checking
-            logger.info(f"REAL bank funding: ${amount} from bank balance ${real_balance}")
+                # Remove sensitive data for response
+                safe_account = bank_account.copy()
+                safe_account.pop('access_token')
+                linked_accounts.append(safe_account)
             
             return {
                 "success": True,
-                "amount": amount,
-                "real_bank_balance": real_balance,
-                "remaining_balance": real_balance - amount,
-                "transfer_method": "ACH",
-                "real_funding": True
+                "accounts_linked": len(linked_accounts),
+                "accounts": linked_accounts
             }
             
         except Exception as e:
-            logger.error(f"Error funding from bank account: {e}")
-            return {"error": "Bank funding failed"}
+            logger.error(f"Error exchanging public token: {e}")
+            raise HTTPException(status_code=500, detail=f"Failed to link bank account: {str(e)}")
+    
+    async def get_real_account_balances(self, user_id: str) -> List[Dict[str, Any]]:
+        """Get current balances for all linked bank accounts"""
+        try:
+            # Get all linked accounts for user
+            accounts = await self.db.real_bank_accounts.find(
+                {"user_id": user_id, "is_active": True}
+            ).to_list(100)
+            
+            if not accounts:
+                return []
+            
+            updated_accounts = []
+            
+            for account in accounts:
+                try:
+                    if not self.config.plaid_client:
+                        # If Plaid not available, return stored balance
+                        account.pop('access_token', None)
+                        account['_id'] = str(account['_id'])
+                        updated_accounts.append(account)
+                        continue
+                    
+                    # Decrypt access token and fetch current balance
+                    access_token = self.decrypt_token(account['access_token'])
+                    accounts_request = AccountsGetRequest(access_token=access_token)
+                    accounts_response = self.config.plaid_client.accounts_get(accounts_request)
+                    
+                    # Update balance for matching account
+                    for plaid_account in accounts_response['accounts']:
+                        if plaid_account['account_id'] == account['account_id']:
+                            current_balance = float(plaid_account['balances']['current'] or 0)
+                            available_balance = float(plaid_account['balances']['available'] or 0)
+                            
+                            # Update in database
+                            await self.db.real_bank_accounts.update_one(
+                                {"_id": account['_id']},
+                                {
+                                    "$set": {
+                                        "balance_current": current_balance,
+                                        "balance_available": available_balance,
+                                        "last_updated": datetime.utcnow()
+                                    }
+                                }
+                            )
+                            
+                            account['balance_current'] = current_balance
+                            account['balance_available'] = available_balance
+                            break
+                    
+                    # Remove sensitive data
+                    account.pop('access_token', None)
+                    account['_id'] = str(account['_id'])
+                    updated_accounts.append(account)
+                    
+                except Exception as e:
+                    logger.error(f"Error updating balance for account {account['account_id']}: {e}")
+                    # Return stored balance if update fails
+                    account.pop('access_token', None)
+                    account['_id'] = str(account['_id'])
+                    updated_accounts.append(account)
+            
+            return updated_accounts
+            
+        except Exception as e:
+            logger.error(f"Error getting account balances: {e}")
+            raise HTTPException(status_code=500, detail=f"Failed to get account balances: {str(e)}")
+    
+    async def get_total_balance(self, user_id: str) -> float:
+        """Get total balance across all linked accounts"""
+        try:
+            accounts = await self.get_real_account_balances(user_id)
+            total_balance = sum(account.get('balance_current', 0) for account in accounts)
+            return total_balance
+        except Exception as e:
+            logger.error(f"Error calculating total balance: {e}")
+            return 0.0
+    
+    async def initiate_real_transfer(self, user_id: str, transfer_request: TransferRequest) -> Dict[str, Any]:
+        """Initiate real money transfer"""
+        try:
+            # For now, we'll create a pending transfer record
+            # In production, this would integrate with Plaid Transfer API or Stripe
+            
+            # Verify user owns the source account
+            source_account = await self.db.real_bank_accounts.find_one({
+                "user_id": user_id,
+                "account_id": transfer_request.from_account_id,
+                "is_active": True
+            })
+            
+            if not source_account:
+                raise HTTPException(status_code=404, detail="Source account not found")
+            
+            # Check sufficient balance
+            if source_account['balance_current'] < transfer_request.amount:
+                raise HTTPException(status_code=400, detail="Insufficient funds")
+            
+            # Calculate fees
+            fee = transfer_request.amount * 0.015  # 1.5% fee
+            total_amount = transfer_request.amount + fee
+            
+            # Create transfer record
+            transfer_id = f"real_txn_{datetime.utcnow().timestamp()}"
+            transfer_record = {
+                "transfer_id": transfer_id,
+                "user_id": user_id,
+                "from_account_id": transfer_request.from_account_id,
+                "to_account_id": transfer_request.to_account_id,
+                "to_email": transfer_request.to_email,
+                "amount": transfer_request.amount,
+                "fee": fee,
+                "total_amount": total_amount,
+                "description": transfer_request.description,
+                "status": "pending",
+                "created_at": datetime.utcnow(),
+                "transfer_type": "real_banking"
+            }
+            
+            await self.db.real_transfers.insert_one(transfer_record)
+            
+            # Update account balance (deduct amount + fee)
+            await self.db.real_bank_accounts.update_one(
+                {"_id": source_account['_id']},
+                {"$inc": {"balance_current": -total_amount}}
+            )
+            
+            return {
+                "success": True,
+                "transfer_id": transfer_id,
+                "amount": transfer_request.amount,
+                "fee": fee,
+                "total_amount": total_amount,
+                "status": "pending",
+                "message": "Real money transfer initiated successfully"
+            }
+            
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f"Error initiating real transfer: {e}")
+            raise HTTPException(status_code=500, detail=f"Transfer failed: {str(e)}")
+    
+    async def get_real_transactions(self, user_id: str, limit: int = 50) -> List[Dict[str, Any]]:
+        """Get real transaction history"""
+        try:
+            # Get transfers from our database
+            transfers = await self.db.real_transfers.find(
+                {"user_id": user_id}
+            ).sort("created_at", -1).limit(limit).to_list(limit)
+            
+            # Convert ObjectId to string
+            for transfer in transfers:
+                transfer['_id'] = str(transfer['_id'])
+            
+            return transfers
+            
+        except Exception as e:
+            logger.error(f"Error getting real transactions: {e}")
+            raise HTTPException(status_code=500, detail=f"Failed to get transactions: {str(e)}")
 
-# Global instance
-real_banking = RealBankingService()
+# Initialize the real banking service
+real_banking_config = RealBankingConfig()
+
+def get_real_banking_service(db):
+    """Get real banking service instance"""
+    return RealBankingService(real_banking_config, db)
