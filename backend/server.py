@@ -706,7 +706,7 @@ async def link_bank_account(bank_data: BankAccountLink, current_user: dict = Dep
 
 # Include routers
 # Import admin_router from the same directory
-from .admin_api import admin_router
+from admin_api import admin_router
 
 # Include the routers in the main app
 app.include_router(api_router)
