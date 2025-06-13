@@ -23,7 +23,7 @@ requests==2.31.0
 requests-oauthlib==2.0.0
 
 # Real Banking Integration
-plaid-python==11.0.0
+plaid-python==34.0.0
 stripe==7.8.0
 
 # Data Validation & Serialization
