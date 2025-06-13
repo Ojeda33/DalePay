@@ -61,7 +61,7 @@ class DalePayAPITester:
             "email": self.test_email,
             "password": self.test_password,
             "full_name": "Test User",
-            "phone": "787-123-4567",
+            "phone": "+17871234567",  # Format: +1XXXXXXXXXX
             "date_of_birth": "1990-01-01",
             "ssn_last_4": "1234",
             "address_line_1": "123 Test St",
