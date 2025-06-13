@@ -24,7 +24,7 @@ requests-oauthlib==2.0.0
 
 # Real Banking Integration
 plaid-python==34.0.0
-stripe==7.8.0
+stripe==11.2.0
 
 # Data Validation & Serialization
 pydantic[email]==2.6.4
