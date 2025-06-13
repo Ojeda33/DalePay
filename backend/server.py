@@ -618,6 +618,16 @@ async def login_user(email: str, password: str):
         return {
             "access_token": access_token,
             "token_type": "bearer",
+            "user": {
+                "user_id": user["id"],
+                "email": user["email"],
+                "full_name": user["full_name"],
+                "phone": user["phone"],
+                "wallet_balance": float(user.get("wallet_balance", 0)),
+                "account_status": user["account_status"],
+                "kyc_status": user.get("kyc_status", "pending"),
+                "subscription_plan": user.get("subscription_plan", "basic")
+            },
             "user_id": user["id"],
             "account_status": user["account_status"],
             "kyc_status": user.get("kyc_status", "pending"),
