@@ -592,9 +592,15 @@ async def register_user(user_data: UserCreate, background_tasks: BackgroundTasks
         raise HTTPException(status_code=500, detail="Registration failed")
 
 @api_router.post("/auth/login")
-async def login_user(email: str, password: str):
+async def login_user(login_data: dict):
     """User login with security logging"""
     try:
+        email = login_data.get("email")
+        password = login_data.get("password")
+        
+        if not email or not password:
+            raise HTTPException(status_code=422, detail="Email and password are required")
+            
         user = await db.users.find_one({"email": email})
         if not user or not verify_password(password, user["password_hash"]):
             # Log failed login attempt
