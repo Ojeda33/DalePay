@@ -1,29 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import axios from 'axios';
 import { LanguageProvider, useLanguage, useTranslation } from './hooks/useLanguage';
 import './App.css';
 
 // Import components
 import ProductionHomepage from './components/ProductionHomepage';
-import LoginSystem from './components/LoginSystem';
 import Dashboard from './components/Dashboard';
-import AdminPanel from './components/AdminPanel';
-import ComplianceDashboard from './components/ComplianceDashboard';
-import UserProfile from './components/UserProfile';
-import TransactionHistory from './components/TransactionHistory';
 import SendMoney from './components/SendMoney';
 import ReceiveMoney from './components/ReceiveMoney';
+import TransactionHistory from './components/TransactionHistory';
 import BankLinking from './components/BankLinking';
-import SubscriptionPlans from './components/SubscriptionPlans';
-import SecurityCenter from './components/SecurityCenter';
-import SupportCenter from './components/SupportCenter';
-
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
-
-// Configure axios defaults
-axios.defaults.baseURL = API;
 
 function AppContent() {
   const [user, setUser] = useState(null);
@@ -181,7 +166,6 @@ function App() {
       <AppContent />
     </LanguageProvider>
   );
-}
 }
 
 export default App;
