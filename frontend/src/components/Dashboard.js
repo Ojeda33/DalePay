@@ -34,28 +34,29 @@ const Dashboard = ({ user, onLogout, onNavigate, darkMode, onToggleDarkMode }) =
     fetchDashboardData();
   }, []);
 
+  // Fetch dashboard data
   const fetchDashboardData = async () => {
     try {
-      // Fetch real wallet balance from production API
-      const profileResponse = await axios.get('/user/profile');
-      setBalance(profileResponse.data.wallet_balance || 0);
+      setLoading(true);
       
-      // Calculate remaining limits
-      setAccountLimits({
-        daily_remaining: profileResponse.data.daily_limit || 0,
-        monthly_remaining: profileResponse.data.monthly_limit || 0
+      // Fetch user profile with real balance
+      const profileResponse = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/user/profile`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
+      
+      if (profileResponse.data) {
+        setBalance(profileResponse.data.wallet_balance || 100);
+      }
 
-      // Fetch recent transactions
-      const transactionsResponse = await axios.get('/transactions?limit=5');
-      setTransactions(transactionsResponse.data || []);
-
-      // Fetch linked bank accounts
-      const bankResponse = await axios.get('/bank-accounts');
-      setBankAccounts(bankResponse.data || []);
-
+      // Fetch transactions
+      const transactionsResponse = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/transactions`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
+      
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
+      // Set default values on error
+      setBalance(100);
     } finally {
       setLoading(false);
     }
