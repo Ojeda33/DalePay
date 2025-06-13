@@ -329,6 +329,38 @@ def run_tests():
     else:
         print("❌ Failed to get transaction history")
     
+    # Test 8: Test Real Banking API - Create Link Token
+    print("\n🔍 Test 8: Testing Real Banking API - Create Link Token...")
+    success, link_token_response = tester.create_banking_link_token()
+    if success:
+        print("✅ Real Banking API correctly returns expected response for create link token")
+    else:
+        print("❌ Real Banking API test failed for create link token")
+    
+    # Test 9: Test Real Banking API - Get Real Bank Accounts
+    print("\n🔍 Test 9: Testing Real Banking API - Get Real Bank Accounts...")
+    success, accounts_response = tester.get_real_bank_accounts()
+    if success:
+        print("✅ Real Banking API correctly returns expected response for get real bank accounts")
+    else:
+        print("❌ Real Banking API test failed for get real bank accounts")
+    
+    # Test 10: Test Real Banking API - Get Total Real Balance
+    print("\n🔍 Test 10: Testing Real Banking API - Get Total Real Balance...")
+    success, balance_response = tester.get_total_real_balance()
+    if success:
+        print("✅ Real Banking API correctly returns expected response for get total real balance")
+    else:
+        print("❌ Real Banking API test failed for get total real balance")
+    
+    # Test 11: Test Real Banking API - Get Real Transactions
+    print("\n🔍 Test 11: Testing Real Banking API - Get Real Transactions...")
+    success, transactions_response = tester.get_real_transactions()
+    if success:
+        print("✅ Real Banking API correctly returns expected response for get real transactions")
+    else:
+        print("❌ Real Banking API test failed for get real transactions")
+    
     # Print test summary
     print(f"\n📊 Tests passed: {tester.tests_passed}/{tester.tests_run}")
     return tester.tests_passed == tester.tests_run
