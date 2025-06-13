@@ -10,7 +10,7 @@ class DalePayAPITester:
         self.user_id = None
         self.tests_run = 0
         self.tests_passed = 0
-        self.test_email = "finaltest@dalepay.com"  # Specific email requested for testing
+        self.test_email = "test4@dalepay.com"  # Specific email requested for testing
         self.test_password = "TestPass123!"
 
     def run_test(self, name, method, endpoint, expected_status, data=None, headers=None):
@@ -60,7 +60,7 @@ class DalePayAPITester:
         user_data = {
             "email": self.test_email,
             "password": self.test_password,
-            "full_name": "Final Test User",
+            "full_name": "Test User",
             "phone": "+17871234567",  # Format: +1XXXXXXXXXX
             "date_of_birth": "1990-01-01",
             "ssn_last_4": "1234",
@@ -192,45 +192,54 @@ class DalePayAPITester:
             print(f"Found {len(response['transactions'])} transactions")
         return success, response
         
-    # Real Banking API Tests
-    def create_banking_link_token(self):
-        """Test creating a Plaid link token"""
+    # Digital Wallet API Tests
+    def create_digital_wallet(self):
+        """Test creating a digital wallet"""
         success, response = self.run_test(
-            "Create Banking Link Token",
+            "Create Digital Wallet",
             "POST",
-            "api/banking/create-link-token",
-            501  # Expecting 501 Not Implemented since Plaid credentials aren't configured
+            "api/wallet/create",
+            200
         )
+        if success:
+            print(f"Successfully created digital wallet")
         return success, response
         
-    def get_real_bank_accounts(self):
-        """Test getting real bank accounts"""
+    def get_wallet_balance(self):
+        """Test getting wallet balance"""
         success, response = self.run_test(
-            "Get Real Bank Accounts",
+            "Get Wallet Balance",
             "GET",
-            "api/banking/accounts",
-            501  # Expecting 501 Not Implemented since Plaid credentials aren't configured
+            "api/wallet/balance",
+            200
         )
+        if success:
+            print(f"Wallet balance: ${response.get('balance', 0)}")
         return success, response
         
-    def get_total_real_balance(self):
-        """Test getting total balance across all linked bank accounts"""
+    def link_bank_to_wallet(self, bank_data):
+        """Test linking a bank account to the wallet"""
         success, response = self.run_test(
-            "Get Total Real Balance",
-            "GET",
-            "api/banking/total-balance",
-            501  # Expecting 501 Not Implemented since Plaid credentials aren't configured
+            "Link Bank to Wallet",
+            "POST",
+            "api/wallet/link-bank",
+            200,
+            data=bank_data
         )
+        if success:
+            print(f"Successfully linked bank to wallet")
         return success, response
         
-    def get_real_transactions(self):
-        """Test getting real transaction history"""
+    def get_wallet_accounts(self):
+        """Test getting wallet linked accounts"""
         success, response = self.run_test(
-            "Get Real Transactions",
+            "Get Wallet Accounts",
             "GET",
-            "api/banking/transactions",
-            501  # Expecting 501 Not Implemented since Plaid credentials aren't configured
+            "api/wallet/accounts",
+            200
         )
+        if success:
+            print(f"Found {len(response.get('accounts', []))} wallet accounts")
         return success, response
 
 def run_tests():
@@ -240,10 +249,10 @@ def run_tests():
     # Create tester instance
     tester = DalePayAPITester(backend_url)
     
-    print("\n🔥 Starting DalePay Final Tests\n")
+    print("\n🔥 Starting DalePay Puerto Rico Tests\n")
     
     # Test 1: Register a new user with specific email
-    print("\n🔍 Test 1: Registering a new user with email finaltest@dalepay.com...")
+    print("\n🔍 Test 1: Registering a new user with email test4@dalepay.com...")
     registration_success = tester.register_user()
     
     # If registration fails, try to login with the same credentials
@@ -268,11 +277,11 @@ def run_tests():
     # Test 3: Test bank linking
     print("\n🔍 Test 3: Testing bank account linking...")
     bank_data = {
-        "bank_name": "Test Bank",
+        "bank_name": "Banco Popular",
         "account_type": "checking",
         "routing_number": "123456789",
         "account_number": "987654321",
-        "account_holder_name": "Final Test User"
+        "account_holder_name": "Test User"
     }
     success, bank_response = tester.link_bank_account(bank_data)
     if not success:
@@ -329,43 +338,50 @@ def run_tests():
     else:
         print("❌ Failed to get transaction history")
     
-    # Test 8: Test Real Banking API - Create Link Token
-    print("\n🔍 Test 8: Testing Real Banking API - Create Link Token...")
-    success, link_token_response = tester.create_banking_link_token()
+    # Test 8: Create Digital Wallet
+    print("\n🔍 Test 8: Creating Digital Wallet...")
+    success, wallet_response = tester.create_digital_wallet()
     if success:
-        print("✅ Real Banking API correctly returns expected response for create link token")
+        print("✅ Successfully created digital wallet")
     else:
-        print("❌ Real Banking API test failed for create link token")
+        print("❌ Failed to create digital wallet")
     
-    # Test 9: Test Real Banking API - Get Real Bank Accounts
-    print("\n🔍 Test 9: Testing Real Banking API - Get Real Bank Accounts...")
-    success, accounts_response = tester.get_real_bank_accounts()
+    # Test 9: Get Wallet Balance
+    print("\n🔍 Test 9: Getting Wallet Balance...")
+    success, balance_response = tester.get_wallet_balance()
     if success:
-        print("✅ Real Banking API correctly returns expected response for get real bank accounts")
+        print(f"✅ Successfully retrieved wallet balance: ${balance_response.get('balance', 0)}")
     else:
-        print("❌ Real Banking API test failed for get real bank accounts")
+        print("❌ Failed to get wallet balance")
     
-    # Test 10: Test Real Banking API - Get Total Real Balance
-    print("\n🔍 Test 10: Testing Real Banking API - Get Total Real Balance...")
-    success, balance_response = tester.get_total_real_balance()
+    # Test 10: Link Bank to Wallet
+    print("\n🔍 Test 10: Linking Bank to Wallet...")
+    wallet_bank_data = {
+        "bank_name": "FirstBank Puerto Rico",
+        "account_type": "checking",
+        "routing_number": "123456789",
+        "account_number": "123456789",
+        "account_holder_name": "Test User"
+    }
+    success, wallet_bank_response = tester.link_bank_to_wallet(wallet_bank_data)
     if success:
-        print("✅ Real Banking API correctly returns expected response for get total real balance")
+        print("✅ Successfully linked bank to wallet")
     else:
-        print("❌ Real Banking API test failed for get total real balance")
+        print("❌ Failed to link bank to wallet")
     
-    # Test 11: Test Real Banking API - Get Real Transactions
-    print("\n🔍 Test 11: Testing Real Banking API - Get Real Transactions...")
-    success, transactions_response = tester.get_real_transactions()
+    # Test 11: Get Wallet Accounts
+    print("\n🔍 Test 11: Getting Wallet Accounts...")
+    success, wallet_accounts_response = tester.get_wallet_accounts()
     if success:
-        print("✅ Real Banking API correctly returns expected response for get real transactions")
+        print(f"✅ Successfully retrieved wallet accounts")
     else:
-        print("❌ Real Banking API test failed for get real transactions")
+        print("❌ Failed to get wallet accounts")
     
     # Print test summary
     print(f"\n📊 Tests passed: {tester.tests_passed}/{tester.tests_run}")
     return tester.tests_passed == tester.tests_run
 
 if __name__ == "__main__":
-    print("🚀 Starting DalePay Final Tests...")
+    print("🚀 Starting DalePay Puerto Rico Tests...")
     success = run_tests()
     print("✅ All tests passed!" if success else "❌ Some tests failed.")
