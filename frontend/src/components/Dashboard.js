@@ -75,19 +75,19 @@ const Dashboard = ({ user, onNavigate, darkMode, onToggleDarkMode }) => {
 
   const quickActions = [
     {
-      title: 'Real Banking',
-      subtitle: 'Connect real accounts',
+      title: t('digitalWallet'),
+      subtitle: t('linkBankAccount'),
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
         </svg>
       ),
       color: 'from-emerald-500 to-emerald-600',
-      onClick: () => setActiveView('real-banking')
+      onClick: () => setActiveView('digital-wallet')
     },
     {
-      title: 'Send Money',
-      subtitle: 'To anyone instantly',
+      title: t('sendMoney'),
+      subtitle: t('instantTransfer'),
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
@@ -97,7 +97,7 @@ const Dashboard = ({ user, onNavigate, darkMode, onToggleDarkMode }) => {
       onClick: () => onNavigate('send')
     },
     {
-      title: 'Receive Money',
+      title: t('receiveMoney'),
       subtitle: 'Generate QR code',
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -108,7 +108,7 @@ const Dashboard = ({ user, onNavigate, darkMode, onToggleDarkMode }) => {
       onClick: () => onNavigate('receive')
     },
     {
-      title: 'Link Bank',
+      title: t('bankLinking'),
       subtitle: 'Add bank account',
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -119,7 +119,7 @@ const Dashboard = ({ user, onNavigate, darkMode, onToggleDarkMode }) => {
       onClick: () => onNavigate('bank-linking')
     },
     {
-      title: 'Transaction History',
+      title: t('transactionHistory'),
       subtitle: 'View all activity',
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
