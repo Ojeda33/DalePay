@@ -40,7 +40,7 @@ const LoginSystem = ({ onLogin, darkMode }) => {
     setError('');
 
     try {
-      const response = await axios.post('/auth/login', {
+      const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/auth/login`, {
         email: loginForm.email,
         password: loginForm.password
       });
