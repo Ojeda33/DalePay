@@ -26,7 +26,18 @@ from passlib.context import CryptContext
 from passlib.hash import bcrypt
 
 # Import real banking integration
-from real_banking import get_real_banking_service, TransferRequest as RealTransferRequest
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
+try:
+    from real_banking import get_real_banking_service, TransferRequest as RealTransferRequest
+    REAL_BANKING_AVAILABLE = True
+except ImportError as e:
+    print(f"Real banking not available: {e}")
+    REAL_BANKING_AVAILABLE = False
+    # Define fallback classes
+    RealTransferRequest = None
 
 # Production Configuration
 ROOT_DIR = Path(__file__).parent
