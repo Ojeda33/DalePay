@@ -569,10 +569,20 @@ async def register_user(user_data: UserCreate, background_tasks: BackgroundTasks
         return {
             "access_token": access_token,
             "token_type": "bearer",
+            "user": {
+                "user_id": user_id,
+                "email": user_data.email,
+                "full_name": user_data.full_name,
+                "phone": user_data.phone,
+                "wallet_balance": 100.00,
+                "account_status": "active",
+                "kyc_status": kyc_result["status"],
+                "subscription_plan": "basic"
+            },
             "user_id": user_id,
             "kyc_status": kyc_result["status"],
             "account_status": "active",
-            "message": "Account created successfully. KYC verification in progress."
+            "message": "Account created successfully. KYC verification approved."
         }
         
     except HTTPException:
