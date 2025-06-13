@@ -25,7 +25,7 @@ import base64
 from passlib.context import CryptContext
 from passlib.hash import bcrypt
 
-# Import real banking integration
+# Import real banking and wallet systems
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -40,11 +40,14 @@ except ImportError as e:
     RealTransferRequest = None
 
 try:
+    from moov_wallet import get_dalepay_wallet, PaymentRequest, MerchantPayment
     from dalepay_wallet import get_dalepay_wallet_service
     MOOV_WALLET_AVAILABLE = True
 except ImportError as e:
     print(f"Moov wallet not available: {e}")
     MOOV_WALLET_AVAILABLE = False
+    PaymentRequest = None
+    MerchantPayment = None
 
 # Production Configuration
 ROOT_DIR = Path(__file__).parent
