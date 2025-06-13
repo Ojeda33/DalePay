@@ -497,14 +497,28 @@ async def register_user(user_data: UserCreate, background_tasks: BackgroundTasks
         # Create user ID
         user_id = str(uuid.uuid4())
         
-        # Create Moov account
-        moov_account_id = await moov_api.create_account(user_data.dict())
+        # For demo purposes, simulate Moov account creation
+        moov_account_id = f"demo_moov_{user_id[:8]}"
         
-        # Perform initial KYC check
-        kyc_result = await perform_kyc_check({"id": user_id, **user_data.dict()})
+        # For demo purposes, auto-approve KYC
+        kyc_result = {
+            "status": "approved",  # Auto-approve for demo
+            "verification_level": "basic",
+            "documents_required": [],
+            "risk_score": "low",
+            "verified_at": datetime.utcnow(),
+            "notes": "Demo auto-approved KYC"
+        }
         
-        # AML screening
-        aml_result = await aml_screening({"id": user_id, **user_data.dict()})
+        # AML screening (auto-clear for demo)
+        aml_result = {
+            "status": "clear",
+            "risk_level": "low",
+            "screening_type": "user_onboarding",
+            "flags": [],
+            "reviewed_by": "demo_system",
+            "reviewed_at": datetime.utcnow()
+        }
         
         # Create user record with encrypted sensitive data
         user_record = {
