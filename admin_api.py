@@ -10,7 +10,7 @@ import logging
 from motor.motor_asyncio import AsyncIOMotorDatabase
 import os
 
-from server import get_current_user, db, serialize_mongo_doc, log_compliance_action, moov_api
+from backend.server import get_current_user, db, serialize_mongo_doc, log_compliance_action, moov_api
 
 # Admin API Router
 admin_router = APIRouter(prefix="/admin")
