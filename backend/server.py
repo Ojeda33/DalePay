@@ -705,7 +705,8 @@ async def link_bank_account(bank_data: BankAccountLink, current_user: dict = Dep
         raise HTTPException(status_code=500, detail="Failed to link bank account")
 
 # Include routers
-from admin_api import admin_router
+# Import admin_router from the same directory
+from .admin_api import admin_router
 
 # Include the routers in the main app
 app.include_router(api_router)
