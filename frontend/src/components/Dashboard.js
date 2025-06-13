@@ -7,7 +7,7 @@ import BankLinking from './BankLinking';
 import DigitalWallet from './DigitalWallet';
 import { useTranslation } from '../hooks/useLanguage';
 
-const Dashboard = ({ user, onNavigate, darkMode }) => {
+const Dashboard = ({ user, onNavigate, darkMode, onToggleDarkMode }) => {
   const [activeView, setActiveView] = useState('dashboard');
   const [balance, setBalance] = useState(0);
   const [realBalance, setRealBalance] = useState(0);
@@ -16,6 +16,7 @@ const Dashboard = ({ user, onNavigate, darkMode }) => {
   const [transactions, setTransactions] = useState([]);
   const [bankAccounts, setBankAccounts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { t } = useTranslation();
   const [accountLimits, setAccountLimits] = useState({
     daily_remaining: 0,
     monthly_remaining: 0
