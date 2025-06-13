@@ -4,21 +4,19 @@ import axios from 'axios';
 import './App.css';
 
 // Import components
+import ProductionHomepage from './components/ProductionHomepage';
 import LoginSystem from './components/LoginSystem';
-import Homepage from './components/Homepage';
 import Dashboard from './components/Dashboard';
+import AdminPanel from './components/AdminPanel';
+import ComplianceDashboard from './components/ComplianceDashboard';
+import UserProfile from './components/UserProfile';
+import TransactionHistory from './components/TransactionHistory';
 import SendMoney from './components/SendMoney';
 import ReceiveMoney from './components/ReceiveMoney';
-import CardProcessor from './components/CardProcessor';
-import CryptoWallet from './components/CryptoWallet';
-import BusinessPortal from './components/BusinessPortal';
-import AdminDashboard from './components/AdminDashboard';
-import UserSettings from './components/UserSettings';
-import TermsConditions from './components/TermsConditions';
-import JorgeTourGuide from './components/JorgeTourGuide';
-import AppSecurity from './components/AppSecurity';
-import RealBankLinking from './components/RealBankLinking';
-import NotificationSystem, { NotificationBell } from './components/NotificationSystem';
+import BankLinking from './components/BankLinking';
+import SubscriptionPlans from './components/SubscriptionPlans';
+import SecurityCenter from './components/SecurityCenter';
+import SupportCenter from './components/SupportCenter';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -30,59 +28,55 @@ function App() {
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState('dashboard');
-  const [showJorgeTour, setShowJorgeTour] = useState(false);
-  const [isAppUnlocked, setIsAppUnlocked] = useState(false);
-  const [showNotifications, setShowNotifications] = useState(false);
-  const [hasNotifications, setHasNotifications] = useState({
-    home: false,
-    dashboard: false,
-    send: false,
-    receive: false,
-    crypto: false,
-    settings: false
-  });
+  const [currentPage, setCurrentPage] = useState('home');
+  const [darkMode, setDarkMode] = useState(false);
+  const [notifications, setNotifications] = useState([]);
 
   useEffect(() => {
     checkAuthStatus();
-    // Check for first-time user to show Jorge tour
-    const hasSeenTour = localStorage.getItem('dalepay_tour_completed');
-    if (!hasSeenTour && isAuthenticated) {
-      setTimeout(() => setShowJorgeTour(true), 2000);
+    // Check for dark mode preference
+    const savedDarkMode = localStorage.getItem('dalepay_dark_mode');
+    if (savedDarkMode) {
+      setDarkMode(JSON.parse(savedDarkMode));
     }
-  }, [isAuthenticated]);
-
-  // Check for notifications (only show when actually needed)
-  useEffect(() => {
-    if (isAuthenticated && user) {
-      // Notification checking is now handled by NotificationSystem component
-    }
-  }, [isAuthenticated, user]);
-
-  const handleNotificationsUpdate = (notifications) => {
-    setHasNotifications(notifications);
-  };
-
-  useEffect(() => {
-    checkAuthStatus();
   }, []);
 
   const checkAuthStatus = async () => {
     const token = localStorage.getItem('dalepay_token');
     if (token) {
       try {
-        const backendUrl = process.env.REACT_APP_BACKEND_URL || import.meta.env.REACT_APP_BACKEND_URL;
         axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-        const response = await axios.get(`${backendUrl}/api/users/me`);
+        const response = await axios.get('/user/profile');
         setUser(response.data);
         setIsAuthenticated(true);
+        
+        // Check for any alerts or notifications
+        fetchNotifications();
       } catch (error) {
         console.error('Auth check failed:', error);
         localStorage.removeItem('dalepay_token');
         delete axios.defaults.headers.common['Authorization'];
+        setIsAuthenticated(false);
       }
     }
     setLoading(false);
+  };
+
+  const fetchNotifications = async () => {
+    try {
+      // In production, this would fetch real notifications
+      setNotifications([
+        {
+          id: 1,
+          type: 'security',
+          message: 'Your account is secured with bank-level encryption',
+          time: new Date(),
+          read: false
+        }
+      ]);
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+    }
   };
 
   const handleLogin = (userData, token) => {
@@ -90,12 +84,7 @@ function App() {
     axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     setUser(userData);
     setIsAuthenticated(true);
-    
-    // Show Jorge tour for new users
-    const hasSeenTour = localStorage.getItem('dalepay_tour_completed');
-    if (!hasSeenTour) {
-      setTimeout(() => setShowJorgeTour(true), 2000);
-    }
+    setCurrentPage('dashboard');
   };
 
   const handleLogout = () => {
@@ -103,249 +92,367 @@ function App() {
     delete axios.defaults.headers.common['Authorization'];
     setUser(null);
     setIsAuthenticated(false);
-    setCurrentPage('dashboard');
-    setShowJorgeTour(false);
+    setCurrentPage('home');
+    setNotifications([]);
   };
 
-  const handleJorgeTourComplete = () => {
-    setShowJorgeTour(false);
-    localStorage.setItem('dalepay_tour_completed', 'true');
+  const toggleDarkMode = () => {
+    const newDarkMode = !darkMode;
+    setDarkMode(newDarkMode);
+    localStorage.setItem('dalepay_dark_mode', JSON.stringify(newDarkMode));
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-600 via-purple-600 to-red-600 flex items-center justify-center">
+      <div className={`min-h-screen flex items-center justify-center ${
+        darkMode ? 'bg-gray-900' : 'bg-gradient-to-br from-blue-600 via-purple-600 to-green-600'
+      }`}>
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-white mx-auto mb-4"></div>
-          <h2 className="text-2xl font-bold text-white">DalePay™</h2>
-          <p className="text-white/80">Cargando...</p>
+          <div className="relative">
+            <div className="animate-spin rounded-full h-20 w-20 border-4 border-white border-t-transparent mx-auto mb-6"></div>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="text-2xl font-bold text-white">$</span>
+            </div>
+          </div>
+          <h2 className="text-3xl font-bold text-white mb-2">DalePay™</h2>
+          <p className="text-white/80">FinCEN Registered Financial Services</p>
+          <div className="mt-4 flex items-center justify-center space-x-2 text-white/60 text-sm">
+            <span>🔒 Bank-Level Security</span>
+            <span>•</span>
+            <span>🇵🇷 Puerto Rico Licensed</span>
+          </div>
         </div>
       </div>
     );
   }
 
+  // Show homepage for non-authenticated users
   if (!isAuthenticated) {
-    return <Homepage onShowLogin={handleLogin} />;
-  }
-
-  // Show app security lock screen if not unlocked
-  if (!isAppUnlocked) {
-    return <AppSecurity onUnlock={() => setIsAppUnlocked(true)} />;
-  }
-
-  const BottomNavigation = () => (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-2">
-      <div className="flex justify-around items-center max-w-md mx-auto">
-        <button
-          onClick={() => setCurrentPage('home')}
-          className={`flex flex-col items-center py-1 px-3 rounded-lg transition-colors ${
-            currentPage === 'home' 
-              ? 'text-blue-600 bg-blue-50' 
-              : 'text-gray-600'
-          }`}
-        >
-          <div className="relative">
-            <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
-            </svg>
-            {hasNotifications.home && (
-              <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></div>
-            )}
-          </div>
-          <span className="text-xs mt-1 font-medium">Home</span>
-        </button>
-        
-        <button
-          onClick={() => setCurrentPage('dashboard')}
-          className={`flex flex-col items-center py-1 px-3 rounded-lg transition-colors ${
-            currentPage === 'dashboard' 
-              ? 'text-blue-600 bg-blue-50' 
-              : 'text-gray-600'
-          }`}
-        >
-          <div className="relative">
-            <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M21 18v1c0 1.1-.9 2-2 2H5c-1.1 0-2-.9-2-2V5c0-1.1.9-2 2-2h14c1.1 0 2 .9 2 2v1h-9c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h9zm0-2v-8c0-.55-.45-1-1-1h-7v10h7c.55 0 1-.45 1-1zM16 13.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/>
-            </svg>
-            {hasNotifications.dashboard && (
-              <div className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-500 rounded-full"></div>
-            )}
-          </div>
-          <span className="text-xs mt-1 font-medium">Wallet</span>
-        </button>
-        
-        <button
-          onClick={() => setCurrentPage('send')}
-          className={`flex flex-col items-center py-1 px-3 rounded-lg transition-colors ${
-            currentPage === 'send' 
-              ? 'text-blue-600 bg-blue-50' 
-              : 'text-gray-600'
-          }`}
-        >
-          <div className="relative">
-            <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M2,21L23,12L2,3V10L17,12L2,14V21Z" />
-            </svg>
-            {hasNotifications.send && (
-              <div className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full"></div>
-            )}
-          </div>
-          <span className="text-xs mt-1 font-medium">Enviar</span>
-        </button>
-        
-        <button
-          onClick={() => setCurrentPage('receive')}
-          className={`flex flex-col items-center py-1 px-3 rounded-lg transition-colors ${
-            currentPage === 'receive' 
-              ? 'text-blue-600 bg-blue-50' 
-              : 'text-gray-600'
-          }`}
-        >
-          <div className="relative">
-            <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M22,3L1,12L22,21V14L7,12L22,10V3Z" />
-            </svg>
-            {hasNotifications.receive && (
-              <div className="absolute -top-1 -right-1 w-2 h-2 bg-blue-500 rounded-full"></div>
-            )}
-          </div>
-          <span className="text-xs mt-1 font-medium">Recibir</span>
-        </button>
-        
-        <button
-          onClick={() => setCurrentPage('crypto')}
-          className={`flex flex-col items-center py-1 px-3 rounded-lg transition-colors ${
-            currentPage === 'crypto' 
-              ? 'text-blue-600 bg-blue-50' 
-              : 'text-gray-600'
-          }`}
-        >
-          <div className="relative">
-            <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M12,6A6,6 0 0,0 6,12A6,6 0 0,0 12,18A6,6 0 0,0 18,12A6,6 0 0,0 12,6M12,8A4,4 0 0,1 16,12A4,4 0 0,1 12,16A4,4 0 0,1 8,12A4,4 0 0,1 12,8Z" />
-            </svg>
-            {hasNotifications.crypto && (
-              <div className="absolute -top-1 -right-1 w-2 h-2 bg-orange-500 rounded-full"></div>
-            )}
-          </div>
-          <span className="text-xs mt-1 font-medium">Crypto</span>
-        </button>
-        
-        <button
-          onClick={() => setCurrentPage('settings')}
-          className={`flex flex-col items-center py-1 px-3 rounded-lg transition-colors ${
-            currentPage === 'settings' 
-              ? 'text-blue-600 bg-blue-50' 
-              : 'text-gray-600'
-          }`}
-        >
-          <div className="relative">
-            <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12,15.5A3.5,3.5 0 0,1 8.5,12A3.5,3.5 0 0,1 12,8.5A3.5,3.5 0 0,1 15.5,12A3.5,3.5 0 0,1 12,15.5M19.43,12.98C19.47,12.66 19.5,12.34 19.5,12C19.5,11.66 19.47,11.34 19.43,11.02L21.54,9.37C21.73,9.22 21.78,8.95 21.66,8.73L19.66,5.27C19.54,5.05 19.27,4.96 19.05,5.05L16.56,6.05C16.04,5.65 15.48,5.32 14.87,5.07L14.5,2.42C14.46,2.18 14.25,2 14,2H10C9.75,2 9.54,2.18 9.5,2.42L9.13,5.07C8.52,5.32 7.96,5.66 7.44,6.05L4.95,5.05C4.73,4.96 4.46,5.05 4.34,5.27L2.34,8.73C2.22,8.95 2.27,9.22 2.46,9.37L4.57,11.02C4.53,11.34 4.5,11.67 4.5,12C4.5,12.33 4.53,12.66 4.57,12.98L2.46,14.63C2.27,14.78 2.22,15.05 2.34,15.27L4.34,18.73C4.46,18.95 4.73,19.03 4.95,18.95L7.44,17.94C7.96,18.34 8.52,18.68 9.13,18.93L9.5,21.58C9.54,21.82 9.75,22 10,22H14C14.25,22 14.46,21.82 14.5,21.58L14.87,18.93C15.48,18.68 16.04,18.34 16.56,17.94L19.05,18.95C19.27,19.03 19.54,18.95 19.66,18.73L21.66,15.27C21.78,15.05 21.73,14.78 21.54,14.63L19.43,12.98Z" />
-            </svg>
-            {hasNotifications.settings && (
-              <div className="absolute -top-1 -right-1 w-2 h-2 bg-purple-500 rounded-full"></div>
-            )}
-          </div>
-          <span className="text-xs mt-1 font-medium">Config</span>
-        </button>
+    return (
+      <div className={darkMode ? 'dark' : ''}>
+        <ProductionHomepage 
+          onLogin={handleLogin} 
+          darkMode={darkMode}
+          onToggleDarkMode={toggleDarkMode}
+        />
       </div>
-    </div>
+    );
+  }
+
+  // Main Navigation Component
+  const Navigation = () => (
+    <nav className={`fixed top-0 left-0 right-0 z-50 ${
+      darkMode 
+        ? 'bg-gray-900/95 border-gray-700' 
+        : 'bg-white/95 border-gray-200'
+    } border-b backdrop-blur-lg`}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16">
+          {/* Logo */}
+          <div className="flex items-center space-x-3">
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+              darkMode ? 'bg-blue-600' : 'bg-gradient-to-r from-blue-600 to-purple-600'
+            }`}>
+              <span className="text-white font-bold text-lg">$</span>
+            </div>
+            <div>
+              <h1 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                DalePay™
+              </h1>
+              <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                FinCEN Licensed
+              </p>
+            </div>
+          </div>
+
+          {/* Navigation Items */}
+          <div className="hidden md:flex items-center space-x-6">
+            <button
+              onClick={() => setCurrentPage('dashboard')}
+              className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                currentPage === 'dashboard'
+                  ? darkMode 
+                    ? 'bg-blue-600 text-white' 
+                    : 'bg-blue-100 text-blue-600'
+                  : darkMode
+                    ? 'text-gray-300 hover:text-white'
+                    : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Dashboard
+            </button>
+            <button
+              onClick={() => setCurrentPage('send')}
+              className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                currentPage === 'send'
+                  ? darkMode 
+                    ? 'bg-green-600 text-white' 
+                    : 'bg-green-100 text-green-600'
+                  : darkMode
+                    ? 'text-gray-300 hover:text-white'
+                    : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Send
+            </button>
+            <button
+              onClick={() => setCurrentPage('receive')}
+              className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                currentPage === 'receive'
+                  ? darkMode 
+                    ? 'bg-purple-600 text-white' 
+                    : 'bg-purple-100 text-purple-600'
+                  : darkMode
+                    ? 'text-gray-300 hover:text-white'
+                    : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Receive
+            </button>
+          </div>
+
+          {/* User Menu */}
+          <div className="flex items-center space-x-4">
+            {/* Notifications */}
+            <div className="relative">
+              <button className={`p-2 rounded-lg ${
+                darkMode ? 'hover:bg-gray-800' : 'hover:bg-gray-100'
+              }`}>
+                <svg className={`w-5 h-5 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`} fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z"/>
+                </svg>
+              </button>
+              {notifications.filter(n => !n.read).length > 0 && (
+                <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></div>
+              )}
+            </div>
+
+            {/* Dark Mode Toggle */}
+            <button
+              onClick={toggleDarkMode}
+              className={`p-2 rounded-lg ${
+                darkMode ? 'hover:bg-gray-800' : 'hover:bg-gray-100'
+              }`}
+            >
+              {darkMode ? (
+                <svg className="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clipRule="evenodd"/>
+                </svg>
+              ) : (
+                <svg className="w-5 h-5 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"/>
+                </svg>
+              )}
+            </button>
+
+            {/* User Profile */}
+            <div className="flex items-center space-x-3">
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                darkMode ? 'bg-blue-600' : 'bg-gradient-to-r from-blue-600 to-purple-600'
+              }`}>
+                <span className="text-white font-medium text-sm">
+                  {user?.full_name?.charAt(0) || 'U'}
+                </span>
+              </div>
+              <div className="hidden sm:block">
+                <p className={`text-sm font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                  {user?.full_name || 'User'}
+                </p>
+                <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                  {user?.subscription_plan || 'Basic'} Plan
+                </p>
+              </div>
+              <button
+                onClick={handleLogout}
+                className={`p-2 rounded-lg ${
+                  darkMode ? 'hover:bg-gray-800' : 'hover:bg-gray-100'
+                }`}
+              >
+                <svg className={`w-4 h-4 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`} fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clipRule="evenodd"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </nav>
   );
 
+  // Render current page
   const renderCurrentPage = () => {
     switch(currentPage) {
-      case 'home':
-        return <Homepage onShowLogin={handleLogin} />;
       case 'dashboard':
-        return <Dashboard user={user} onNavigate={setCurrentPage} />;
+        return <Dashboard user={user} onNavigate={setCurrentPage} darkMode={darkMode} />;
       case 'send':
-        return <SendMoney user={user} onBack={() => setCurrentPage('dashboard')} />;
+        return <SendMoney user={user} onBack={() => setCurrentPage('dashboard')} darkMode={darkMode} />;
       case 'receive':
-        return <ReceiveMoney user={user} onBack={() => setCurrentPage('dashboard')} />;
-      case 'cards':
-        return <CardProcessor user={user} onBack={() => setCurrentPage('dashboard')} onBalanceUpdate={checkAuthStatus} onNavigate={setCurrentPage} />;
-      case 'crypto':
-        return <CryptoWallet user={user} onBack={() => setCurrentPage('dashboard')} />;
+        return <ReceiveMoney user={user} onBack={() => setCurrentPage('dashboard')} darkMode={darkMode} />;
+      case 'profile':
+        return <UserProfile user={user} onBack={() => setCurrentPage('dashboard')} darkMode={darkMode} />;
+      case 'transactions':
+        return <TransactionHistory user={user} onBack={() => setCurrentPage('dashboard')} darkMode={darkMode} />;
       case 'bank-linking':
-        return <RealBankLinking user={user} onBack={() => setCurrentPage('cards')} onBankLinked={() => setCurrentPage('dashboard')} />;
-      case 'business':
-        return <BusinessPortal user={user} onBack={() => setCurrentPage('dashboard')} />;
-      case 'settings':
-        return <UserSettings user={user} onBack={() => setCurrentPage('dashboard')} onLogout={handleLogout} />;
+        return <BankLinking user={user} onBack={() => setCurrentPage('dashboard')} darkMode={darkMode} />;
+      case 'subscriptions':
+        return <SubscriptionPlans user={user} onBack={() => setCurrentPage('dashboard')} darkMode={darkMode} />;
+      case 'security':
+        return <SecurityCenter user={user} onBack={() => setCurrentPage('dashboard')} darkMode={darkMode} />;
+      case 'support':
+        return <SupportCenter user={user} onBack={() => setCurrentPage('dashboard')} darkMode={darkMode} />;
       case 'admin':
-        return user?.role === 'admin' ? (
-          <AdminDashboard user={user} onBack={() => setCurrentPage('dashboard')} />
+        return user?.email?.includes('admin') ? (
+          <AdminPanel user={user} onBack={() => setCurrentPage('dashboard')} darkMode={darkMode} />
         ) : (
-          <Dashboard user={user} onNavigate={setCurrentPage} />
+          <Dashboard user={user} onNavigate={setCurrentPage} darkMode={darkMode} />
         );
-      case 'terms':
-        return <TermsConditions onBack={() => setCurrentPage('dashboard')} />;
+      case 'compliance':
+        return user?.email?.includes('admin') ? (
+          <ComplianceDashboard user={user} onBack={() => setCurrentPage('dashboard')} darkMode={darkMode} />
+        ) : (
+          <Dashboard user={user} onNavigate={setCurrentPage} darkMode={darkMode} />
+        );
       default:
-        return <Dashboard user={user} onNavigate={setCurrentPage} />;
+        return <Dashboard user={user} onNavigate={setCurrentPage} darkMode={darkMode} />;
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Jorge Tour Guide */}
-      {showJorgeTour && (
-        <JorgeTourGuide 
-          user={user}
-          currentPage={currentPage}
-          onClose={handleJorgeTourComplete}
-          onNavigate={setCurrentPage}
-        />
-      )}
-
-      {/* Notification System */}
-      {showNotifications && (
-        <NotificationSystem 
-          user={user}
-          onNotificationsUpdate={handleNotificationsUpdate}
-        />
-      )}
-
-      {/* Top Header */}
-      <header className="bg-gradient-to-r from-blue-600 via-purple-600 to-red-600 text-white p-4 shadow-lg">
-        <div className="flex items-center justify-between max-w-md mx-auto">
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
-              <span className="text-blue-600 font-bold text-sm">D</span>
-            </div>
-            <h1 className="text-xl font-bold">DalePay™</h1>
-          </div>
-          <div className="flex items-center space-x-3">
-            {/* Notification Bell */}
-            <NotificationBell 
-              notificationCount={Object.values(hasNotifications).filter(Boolean).length}
-              onClick={() => setShowNotifications(true)}
-            />
-            {/* Jorge Help Button */}
-            <button 
-              onClick={() => setShowJorgeTour(true)}
-              className="bg-white/20 p-2 rounded-full hover:bg-white/30 transition-colors"
-              title="Ayuda con Jorge"
-            >
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd"/>
-              </svg>
-            </button>
-            <div className="text-right">
-              <p className="text-sm opacity-90">¡Hola, {user?.full_name?.split(' ')[0]}!</p>
-              <p className="text-xs opacity-75">Puerto Rico Digital Wallet</p>
-            </div>
-          </div>
-        </div>
-      </header>
-
+    <div className={`min-h-screen ${darkMode ? 'dark bg-gray-900' : 'bg-gray-50'}`}>
+      <Navigation />
+      
       {/* Main Content */}
-      <main className="pb-20">
+      <main className="pt-16">
         {renderCurrentPage()}
       </main>
 
-      {/* Bottom Navigation */}
-      <BottomNavigation />
+      {/* Footer */}
+      <footer className={`mt-auto ${
+        darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+      } border-t`}>
+        <div className="max-w-7xl mx-auto px-4 py-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            {/* Company Info */}
+            <div>
+              <div className="flex items-center space-x-2 mb-4">
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                  darkMode ? 'bg-blue-600' : 'bg-gradient-to-r from-blue-600 to-purple-600'
+                }`}>
+                  <span className="text-white font-bold">$</span>
+                </div>
+                <span className={`font-bold text-lg ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                  DalePay™
+                </span>
+              </div>
+              <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'} mb-4`}>
+                Puerto Rico's premier digital wallet. FinCEN registered and Moov powered for secure, instant money transfers.
+              </p>
+              <div className="flex items-center space-x-2 text-xs">
+                <span className={darkMode ? 'text-gray-400' : 'text-gray-500'}>🔒 FDIC Insured</span>
+                <span className={darkMode ? 'text-gray-600' : 'text-gray-300'}>•</span>
+                <span className={darkMode ? 'text-gray-400' : 'text-gray-500'}>🏛️ FinCEN Licensed</span>
+              </div>
+            </div>
+
+            {/* Legal */}
+            <div>
+              <h4 className={`font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                Legal & Compliance
+              </h4>
+              <ul className="space-y-2 text-sm">
+                <li>
+                  <a href="#" className={`${darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'} transition-colors`}>
+                    Terms & Conditions
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className={`${darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'} transition-colors`}>
+                    Privacy Policy
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className={`${darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'} transition-colors`}>
+                    AML Policy
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className={`${darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'} transition-colors`}>
+                    FinCEN Registration
+                  </a>
+                </li>
+              </ul>
+            </div>
+
+            {/* Support */}
+            <div>
+              <h4 className={`font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                Support
+              </h4>
+              <ul className="space-y-2 text-sm">
+                <li>
+                  <a href="#" className={`${darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'} transition-colors`}>
+                    Help Center
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className={`${darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'} transition-colors`}>
+                    Contact Us
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className={`${darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'} transition-colors`}>
+                    Security Center
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className={`${darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'} transition-colors`}>
+                    Report Fraud
+                  </a>
+                </li>
+              </ul>
+            </div>
+
+            {/* Certifications */}
+            <div>
+              <h4 className={`font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                Certifications
+              </h4>
+              <div className="space-y-3">
+                <div className={`p-3 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
+                  <div className="text-xs font-medium text-blue-600 mb-1">FinCEN MSB</div>
+                  <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                    Registered Money Services Business
+                  </div>
+                </div>
+                <div className={`p-3 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
+                  <div className="text-xs font-medium text-green-600 mb-1">Moov Partner</div>
+                  <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                    FDIC-Insured Banking Services
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom Section */}
+          <div className={`mt-8 pt-8 border-t ${darkMode ? 'border-gray-700' : 'border-gray-200'} flex flex-col md:flex-row items-center justify-between`}>
+            <div className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+              © 2024 DalePay Financial Services. All rights reserved. • Made in Puerto Rico 🇵🇷
+            </div>
+            <div className="flex items-center space-x-6 mt-4 md:mt-0">
+              <span className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                Powered by Moov Financial
+              </span>
+              <div className="flex items-center space-x-2">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <span className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                  All systems operational
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
