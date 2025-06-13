@@ -528,7 +528,7 @@ async def register_user(user_data: UserCreate, background_tasks: BackgroundTasks
             "full_name": user_data.full_name,
             "phone": user_data.phone,
             "moov_account_id": moov_account_id,
-            "wallet_balance": Decimal('0.00'),
+            "wallet_balance": Decimal('100.00'),  # Demo: Start with $100
             "account_status": "active",  # active, frozen, suspended, closed
             "kyc_status": kyc_result["status"],
             "kyc_level": kyc_result["verification_level"],
