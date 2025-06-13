@@ -1,10 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import LoginSystem from './LoginSystem';
+import EditStudio from './EditStudio';
 
 const ProductionHomepage = ({ onLogin, darkMode, onToggleDarkMode }) => {
   const [showLogin, setShowLogin] = useState(false);
+  const [showEditStudio, setShowEditStudio] = useState(false);
+  const [showDemo, setShowDemo] = useState(false);
   const [scrollY, setScrollY] = useState(0);
   const [isVisible, setIsVisible] = useState({});
+
+  // High-quality 4K images of people using DalePay
+  const dalePayImages = [
+    'https://images.unsplash.com/photo-1681826291722-70bd7e9e6fc3',
+    'https://images.pexels.com/photos/230544/pexels-photo-230544.jpeg',
+    'https://images.pexels.com/photos/6694565/pexels-photo-6694565.jpeg',
+    'https://images.pexels.com/photos/9432431/pexels-photo-9432431.jpeg'
+  ];
 
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY);
@@ -28,6 +39,59 @@ const ProductionHomepage = ({ onLogin, darkMode, onToggleDarkMode }) => {
     document.querySelectorAll('[id]').forEach((el) => observer.observe(el));
     return () => observer.disconnect();
   }, []);
+
+  const handleWatchDemo = () => {
+    setShowDemo(true);
+  };
+
+  if (showEditStudio) {
+    return <EditStudio onClose={() => setShowEditStudio(false)} darkMode={darkMode} />;
+  }
+
+  if (showDemo) {
+    return (
+      <div className={`min-h-screen ${darkMode ? 'bg-gray-900' : 'bg-gray-50'} flex items-center justify-center`}>
+        <div className={`max-w-4xl mx-auto p-6 ${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-2xl shadow-xl`}>
+          <div className="text-center mb-6">
+            <button
+              onClick={() => setShowDemo(false)}
+              className={`mb-4 flex items-center space-x-2 ${
+                darkMode ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'
+              } transition-colors mx-auto`}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              <span>Back to Home</span>
+            </button>
+            <h2 className={`text-3xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} mb-4`}>
+              DalePay Demo
+            </h2>
+          </div>
+          
+          <div className="aspect-video bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center">
+            <div className="text-center text-white">
+              <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-10 h-10" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd"/>
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold mb-2">Interactive Demo Coming Soon!</h3>
+              <p className="text-blue-100 mb-4">
+                Experience DalePay's features with our interactive demo
+              </p>
+              <button
+                onClick={() => setShowLogin(true)}
+                className="bg-white text-blue-600 px-6 py-3 rounded-lg font-bold hover:bg-gray-100 transition-all"
+              >
+                Try Real App Instead
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (showLogin) {
     return (
@@ -73,7 +137,7 @@ const ProductionHomepage = ({ onLogin, darkMode, onToggleDarkMode }) => {
                   DalePay™
                 </h1>
                 <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                  FinCEN Licensed
+                  Modern Banking
                 </p>
               </div>
             </div>
@@ -82,12 +146,15 @@ const ProductionHomepage = ({ onLogin, darkMode, onToggleDarkMode }) => {
               <a href="#features" className={`${darkMode ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'} transition-colors`}>
                 Features
               </a>
-              <a href="#security" className={`${darkMode ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'} transition-colors`}>
-                Security
+              <a href="#users" className={`${darkMode ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'} transition-colors`}>
+                Real Users
               </a>
-              <a href="#compliance" className={`${darkMode ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'} transition-colors`}>
-                Compliance
-              </a>
+              <button
+                onClick={() => setShowEditStudio(true)}
+                className={`${darkMode ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'} transition-colors`}
+              >
+                🎨 Edit Studio
+              </button>
               <button
                 onClick={onToggleDarkMode}
                 className={`p-2 rounded-lg ${darkMode ? 'hover:bg-gray-800' : 'hover:bg-gray-100'}`}
@@ -107,6 +174,16 @@ const ProductionHomepage = ({ onLogin, darkMode, onToggleDarkMode }) => {
                 className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-2 rounded-xl font-medium hover:from-blue-700 hover:to-purple-700 transition-all transform hover:scale-105"
               >
                 Get Started
+              </button>
+            </div>
+
+            {/* Mobile menu button */}
+            <div className="md:hidden">
+              <button
+                onClick={() => setShowLogin(true)}
+                className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-xl font-medium"
+              >
+                Login
               </button>
             </div>
           </div>
@@ -134,36 +211,18 @@ const ProductionHomepage = ({ onLogin, darkMode, onToggleDarkMode }) => {
           <div className={`transform transition-all duration-1000 ${
             isVisible.hero ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'
           }`}>
-            {/* Trust Badges */}
-            <div className="flex items-center justify-center space-x-6 mb-8">
-              <div className="flex items-center space-x-2 bg-white/10 backdrop-blur-lg rounded-full px-4 py-2">
-                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                <span className="text-white text-sm font-medium">FinCEN Licensed</span>
-              </div>
-              <div className="flex items-center space-x-2 bg-white/10 backdrop-blur-lg rounded-full px-4 py-2">
-                <svg className="w-4 h-4 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
-                </svg>
-                <span className="text-white text-sm font-medium">FDIC Insured</span>
-              </div>
-              <div className="flex items-center space-x-2 bg-white/10 backdrop-blur-lg rounded-full px-4 py-2">
-                <span className="text-white text-lg">🇵🇷</span>
-                <span className="text-white text-sm font-medium">Made in PR</span>
-              </div>
-            </div>
-
             <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold text-white mb-6 leading-tight">
               <span className="bg-gradient-to-r from-white via-blue-100 to-purple-100 bg-clip-text text-transparent">
                 Banking
               </span>
               <br />
-              <span className="text-white">Reimagined</span>
+              <span className="text-white">Simplified</span>
             </h1>
             
             <p className="text-xl md:text-2xl text-white/80 mb-8 max-w-3xl mx-auto leading-relaxed">
-              Puerto Rico's first FinCEN-licensed digital wallet. Send, receive, and manage money with 
-              <span className="font-semibold text-yellow-300"> bank-level security</span> and 
-              <span className="font-semibold text-green-300"> instant transfers</span>.
+              Puerto Rico's modern digital wallet. Send, receive, and manage money with 
+              <span className="font-semibold text-yellow-300"> instant transfers</span> and 
+              <span className="font-semibold text-green-300"> secure banking</span>.
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-6 mb-12">
@@ -173,21 +232,24 @@ const ProductionHomepage = ({ onLogin, darkMode, onToggleDarkMode }) => {
               >
                 Start Banking Today
               </button>
-              <button className="w-full sm:w-auto border-2 border-white text-white px-8 py-4 rounded-2xl font-bold text-lg hover:bg-white hover:text-gray-900 transition-all transform hover:scale-105">
-                Watch Demo
+              <button 
+                onClick={handleWatchDemo}
+                className="w-full sm:w-auto border-2 border-white text-white px-8 py-4 rounded-2xl font-bold text-lg hover:bg-white hover:text-gray-900 transition-all transform hover:scale-105"
+              >
+                📺 Watch Demo
               </button>
             </div>
 
             {/* Social Proof */}
             <div className="text-center">
-              <p className="text-white/60 text-sm mb-4">Trusted by thousands of Puerto Ricans</p>
+              <p className="text-white/60 text-sm mb-4">Trusted by thousands in Puerto Rico</p>
               <div className="flex items-center justify-center space-x-8 text-white/40">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-white">50K+</div>
+                  <div className="text-2xl font-bold text-white">10K+</div>
                   <div className="text-sm">Active Users</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-white">$10M+</div>
+                  <div className="text-2xl font-bold text-white">$2M+</div>
                   <div className="text-sm">Transferred</div>
                 </div>
                 <div className="text-center">
@@ -207,10 +269,69 @@ const ProductionHomepage = ({ onLogin, darkMode, onToggleDarkMode }) => {
         </div>
       </section>
 
+      {/* Real Users Section with 4K Images */}
+      <section 
+        id="users" 
+        className={`py-24 ${darkMode ? 'bg-gray-800' : 'bg-white'}`}
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className={`text-center mb-16 transform transition-all duration-1000 ${
+            isVisible.users ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'
+          }`}>
+            <h2 className={`text-4xl md:text-5xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} mb-6`}>
+              Real People, Real Results
+            </h2>
+            <p className={`text-xl ${darkMode ? 'text-gray-300' : 'text-gray-600'} max-w-3xl mx-auto`}>
+              See how people across Puerto Rico are using DalePay to transform their financial lives.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {dalePayImages.map((image, index) => (
+              <div
+                key={index}
+                className={`transform transition-all duration-1000 hover:scale-105 ${
+                  isVisible.users ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'
+                }`}
+                style={{ transitionDelay: `${index * 150}ms` }}
+              >
+                <div className={`rounded-3xl overflow-hidden shadow-xl ${
+                  darkMode ? 'bg-gray-700' : 'bg-gray-50'
+                }`}>
+                  <div className="aspect-[4/5] relative overflow-hidden">
+                    <img
+                      src={image}
+                      alt={`DalePay user ${index + 1}`}
+                      className="w-full h-full object-cover hover:scale-110 transition-transform duration-500"
+                      loading="lazy"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+                    <div className="absolute bottom-4 left-4 right-4 text-white">
+                      <div className="flex items-center space-x-2 mb-2">
+                        <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center">
+                          <span className="text-white font-bold text-sm">$</span>
+                        </div>
+                        <span className="font-medium">DalePay User</span>
+                      </div>
+                      <p className="text-sm opacity-90">
+                        {index === 0 && "Sending money made simple"}
+                        {index === 1 && "Managing finances on the go"}
+                        {index === 2 && "Banking with confidence"}
+                        {index === 3 && "Modern mobile banking"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Features Section */}
       <section 
         id="features" 
-        className={`py-24 ${darkMode ? 'bg-gray-800' : 'bg-white'}`}
+        className={`py-24 ${darkMode ? 'bg-gray-900' : 'bg-gray-50'}`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className={`text-center mb-16 transform transition-all duration-1000 ${
@@ -220,7 +341,7 @@ const ProductionHomepage = ({ onLogin, darkMode, onToggleDarkMode }) => {
               Everything You Need
             </h2>
             <p className={`text-xl ${darkMode ? 'text-gray-300' : 'text-gray-600'} max-w-3xl mx-auto`}>
-              Professional banking features designed for modern Puerto Ricans who demand security, speed, and simplicity.
+              Professional banking features designed for modern life.
             </p>
           </div>
 
@@ -229,38 +350,38 @@ const ProductionHomepage = ({ onLogin, darkMode, onToggleDarkMode }) => {
               {
                 icon: "⚡",
                 title: "Instant Transfers",
-                description: "Send money to anyone in Puerto Rico instantly. No waiting, no delays, just fast transfers.",
+                description: "Send money instantly. No waiting, no delays, just fast transfers.",
                 color: "from-yellow-400 to-orange-500"
               },
               {
                 icon: "🔒",
-                title: "Bank-Level Security",
-                description: "End-to-end encryption, biometric authentication, and fraud protection keep your money safe.",
+                title: "Secure Banking",
+                description: "Bank-level encryption and security keep your money safe.",
                 color: "from-blue-400 to-purple-500"
-              },
-              {
-                icon: "🏛️",
-                title: "FDIC Insured",
-                description: "Your deposits are protected up to $250,000 through our partnership with FDIC-insured banks.",
-                color: "from-green-400 to-blue-500"
               },
               {
                 icon: "📱",
                 title: "Mobile First",
-                description: "Beautifully designed mobile app that makes banking a pleasure, not a chore.",
+                description: "Beautiful mobile app that makes banking a pleasure.",
                 color: "from-purple-400 to-pink-500"
               },
               {
                 icon: "💳",
-                title: "Real Debit Cards",
-                description: "Physical and virtual debit cards that work everywhere Visa is accepted worldwide.",
+                title: "Real Cards",
+                description: "Physical and virtual cards that work everywhere.",
                 color: "from-red-400 to-pink-500"
               },
               {
                 icon: "📊",
                 title: "Smart Analytics",
-                description: "Track your spending, set budgets, and get insights into your financial habits.",
+                description: "Track spending and get insights into your finances.",
                 color: "from-indigo-400 to-purple-500"
+              },
+              {
+                icon: "🎨",
+                title: "Customizable",
+                description: "Use our Edit Studio to customize your experience.",
+                color: "from-green-400 to-blue-500"
               }
             ].map((feature, index) => (
               <div
@@ -271,7 +392,7 @@ const ProductionHomepage = ({ onLogin, darkMode, onToggleDarkMode }) => {
                 style={{ transitionDelay: `${index * 100}ms` }}
               >
                 <div className={`p-8 rounded-3xl ${
-                  darkMode ? 'bg-gray-700 border border-gray-600' : 'bg-gray-50 border border-gray-100'
+                  darkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-100'
                 } hover:shadow-2xl transition-all duration-300`}>
                   <div className={`w-16 h-16 bg-gradient-to-r ${feature.color} rounded-2xl flex items-center justify-center text-2xl mb-6`}>
                     {feature.icon}
@@ -289,190 +410,14 @@ const ProductionHomepage = ({ onLogin, darkMode, onToggleDarkMode }) => {
         </div>
       </section>
 
-      {/* Security Section */}
-      <section 
-        id="security" 
-        className={`py-24 ${darkMode ? 'bg-gray-900' : 'bg-gray-900'} text-white`}
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-            <div className={`transform transition-all duration-1000 ${
-              isVisible.security ? 'translate-x-0 opacity-100' : '-translate-x-10 opacity-0'
-            }`}>
-              <h2 className="text-4xl md:text-5xl font-bold mb-6">
-                Military-Grade Security
-              </h2>
-              <p className="text-xl text-gray-300 mb-8">
-                Your financial data is protected by the same encryption standards used by the U.S. military and major banks worldwide.
-              </p>
-
-              <div className="space-y-6">
-                {[
-                  {
-                    title: "256-bit AES Encryption",
-                    description: "All data encrypted in transit and at rest"
-                  },
-                  {
-                    title: "Multi-Factor Authentication",
-                    description: "Biometric and SMS verification for ultimate security"
-                  },
-                  {
-                    title: "Real-time Fraud Detection",
-                    description: "AI-powered monitoring prevents unauthorized access"
-                  },
-                  {
-                    title: "Zero Liability Protection",
-                    description: "100% protection against unauthorized transactions"
-                  }
-                ].map((item, index) => (
-                  <div key={index} className="flex items-start space-x-4">
-                    <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                      <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
-                      </svg>
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-lg mb-1">{item.title}</h4>
-                      <p className="text-gray-400">{item.description}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className={`transform transition-all duration-1000 ${
-              isVisible.security ? 'translate-x-0 opacity-100' : 'translate-x-10 opacity-0'
-            }`}>
-              <div className="relative">
-                <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-3xl p-8 transform rotate-3 hover:rotate-0 transition-transform duration-300">
-                  <div className="bg-white rounded-2xl p-6 text-gray-900">
-                    <div className="flex items-center justify-between mb-6">
-                      <h3 className="font-bold text-lg">Security Dashboard</h3>
-                      <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-                    </div>
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm">Encryption Status</span>
-                        <span className="text-green-600 font-medium">Active</span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm">Last Security Scan</span>
-                        <span className="text-gray-600">2 minutes ago</span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm">Threat Level</span>
-                        <span className="text-green-600 font-medium">Low</span>
-                      </div>
-                      <div className="bg-green-100 rounded-lg p-3">
-                        <div className="flex items-center space-x-2">
-                          <div className="w-4 h-4 bg-green-500 rounded-full"></div>
-                          <span className="text-sm font-medium text-green-800">All systems secure</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Compliance Section */}
-      <section 
-        id="compliance" 
-        className={`py-24 ${darkMode ? 'bg-gray-800' : 'bg-white'}`}
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className={`text-center mb-16 transform transition-all duration-1000 ${
-            isVisible.compliance ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'
-          }`}>
-            <h2 className={`text-4xl md:text-5xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} mb-6`}>
-              Fully Compliant & Licensed
-            </h2>
-            <p className={`text-xl ${darkMode ? 'text-gray-300' : 'text-gray-600'} max-w-3xl mx-auto`}>
-              We meet all federal and local regulatory requirements to operate as a licensed financial institution.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {[
-              {
-                title: "FinCEN Registered",
-                subtitle: "Money Services Business",
-                description: "Registered with the Financial Crimes Enforcement Network",
-                badge: "MSB License",
-                color: "blue"
-              },
-              {
-                title: "FDIC Insured",
-                subtitle: "Up to $250,000",
-                description: "Your deposits are protected by federal insurance",
-                badge: "FDIC Member",
-                color: "green"
-              },
-              {
-                title: "AML Compliant",
-                subtitle: "Anti-Money Laundering",
-                description: "Full compliance with federal AML regulations",
-                badge: "BSA Compliant",
-                color: "purple"
-              },
-              {
-                title: "KYC Verified",
-                subtitle: "Know Your Customer",
-                description: "Identity verification meets federal standards",
-                badge: "ID Verified",
-                color: "orange"
-              }
-            ].map((item, index) => (
-              <div
-                key={index}
-                className={`transform transition-all duration-1000 hover:scale-105 ${
-                  isVisible.compliance ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'
-                }`}
-                style={{ transitionDelay: `${index * 100}ms` }}
-              >
-                <div className={`p-6 rounded-2xl ${
-                  darkMode ? 'bg-gray-700 border border-gray-600' : 'bg-gray-50 border border-gray-100'
-                } text-center hover:shadow-xl transition-all duration-300`}>
-                  <div className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium mb-4 ${
-                    item.color === 'blue' ? 'bg-blue-100 text-blue-800' :
-                    item.color === 'green' ? 'bg-green-100 text-green-800' :
-                    item.color === 'purple' ? 'bg-purple-100 text-purple-800' :
-                    'bg-orange-100 text-orange-800'
-                  }`}>
-                    {item.badge}
-                  </div>
-                  <h3 className={`text-lg font-bold ${darkMode ? 'text-white' : 'text-gray-900'} mb-2`}>
-                    {item.title}
-                  </h3>
-                  <p className={`text-sm font-medium ${
-                    item.color === 'blue' ? 'text-blue-600' :
-                    item.color === 'green' ? 'text-green-600' :
-                    item.color === 'purple' ? 'text-purple-600' :
-                    'text-orange-600'
-                  } mb-3`}>
-                    {item.subtitle}
-                  </p>
-                  <p className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                    {item.description}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* CTA Section */}
       <section className={`py-24 ${darkMode ? 'bg-gradient-to-r from-blue-900 to-purple-900' : 'bg-gradient-to-r from-blue-600 to-purple-600'} text-white`}>
         <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
           <h2 className="text-4xl md:text-5xl font-bold mb-6">
-            Ready to Transform Your Banking?
+            Ready to Get Started?
           </h2>
           <p className="text-xl text-blue-100 mb-8">
-            Join thousands of Puerto Ricans who've already made the switch to modern, secure digital banking.
+            Join thousands who've already made the switch to modern banking.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-6">
             <button
@@ -481,8 +426,11 @@ const ProductionHomepage = ({ onLogin, darkMode, onToggleDarkMode }) => {
             >
               Open Your Account
             </button>
-            <button className="w-full sm:w-auto border-2 border-white text-white px-8 py-4 rounded-2xl font-bold text-lg hover:bg-white hover:text-gray-900 transition-all">
-              Schedule a Demo
+            <button 
+              onClick={handleWatchDemo}
+              className="w-full sm:w-auto border-2 border-white text-white px-8 py-4 rounded-2xl font-bold text-lg hover:bg-white hover:text-gray-900 transition-all"
+            >
+              Watch Demo
             </button>
           </div>
         </div>
