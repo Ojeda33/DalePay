@@ -704,8 +704,12 @@ async def link_bank_account(bank_data: BankAccountLink, current_user: dict = Dep
         logger.error(f"Bank linking error: {e}")
         raise HTTPException(status_code=500, detail="Failed to link bank account")
 
-# Include the router
+# Include routers
+from admin_api import admin_router
+
+# Include the routers in the main app
 app.include_router(api_router)
+app.include_router(admin_router)
 
 # CORS Configuration for production
 app.add_middleware(
