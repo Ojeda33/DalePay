@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import axios from 'axios';
+import { LanguageProvider, useLanguage, useTranslation } from './hooks/useLanguage';
 import './App.css';
 
 // Import components
