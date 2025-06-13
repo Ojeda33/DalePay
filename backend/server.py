@@ -757,13 +757,26 @@ async def send_money(transfer_data: MoneyTransfer, current_user: dict = Depends(
         elif transfer_data.recipient_phone:
             recipient = await db.users.find_one({"phone": transfer_data.recipient_phone})
         
+        # For demo purposes, create a demo recipient if not found
         if not recipient:
-            raise HTTPException(status_code=404, detail="Recipient not found")
+            recipient_id = str(uuid.uuid4())
+            demo_recipient = {
+                "id": recipient_id,
+                "email": transfer_data.recipient_email or f"demo_{recipient_id[:8]}@demo.com",
+                "full_name": "Demo Recipient",
+                "phone": transfer_data.recipient_phone or "787-000-0000",
+                "wallet_balance": 0.0,
+                "account_status": "active",
+                "kyc_status": "approved",
+                "created_at": datetime.utcnow()
+            }
+            await db.users.insert_one(demo_recipient)
+            recipient = demo_recipient
         
         # Check if user has sufficient balance
-        current_balance = current_user.get("wallet_balance", Decimal('0.00'))
-        fee = transfer_data.amount * Decimal('0.015') if transfer_data.transfer_type == "instant" else Decimal('0.00')
-        total_cost = transfer_data.amount + fee
+        current_balance = float(current_user.get("wallet_balance", 0))
+        fee = float(transfer_data.amount) * 0.015 if transfer_data.transfer_type == "instant" else 0.0
+        total_cost = float(transfer_data.amount) + fee
         
         if total_cost > current_balance:
             raise HTTPException(status_code=400, detail="Insufficient funds")
@@ -775,7 +788,7 @@ async def send_money(transfer_data: MoneyTransfer, current_user: dict = Depends(
             "from_user_id": current_user["id"],
             "to_user_id": recipient["id"],
             "amount": float(transfer_data.amount),
-            "fee": float(fee),
+            "fee": fee,
             "description": transfer_data.description or "DalePay Transfer",
             "transfer_type": transfer_data.transfer_type,
             "status": "completed",  # Demo: Auto-complete
@@ -788,7 +801,7 @@ async def send_money(transfer_data: MoneyTransfer, current_user: dict = Depends(
         # Update balances
         await db.users.update_one(
             {"id": current_user["id"]},
-            {"$inc": {"wallet_balance": float(-total_cost)}}
+            {"$inc": {"wallet_balance": -total_cost}}
         )
         
         await db.users.update_one(
@@ -809,7 +822,7 @@ async def send_money(transfer_data: MoneyTransfer, current_user: dict = Depends(
             "transaction_id": transaction_id,
             "status": "completed",
             "amount": float(transfer_data.amount),
-            "fee": float(fee),
+            "fee": fee,
             "message": "Transfer completed successfully"
         }
         
