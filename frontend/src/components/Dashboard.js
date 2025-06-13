@@ -490,6 +490,41 @@ const Dashboard = ({ user, onNavigate, darkMode }) => {
           </p>
         </div>
       </div>
+      
+      {/* Real Banking Modal/View */}
+      {activeView === 'real-banking' && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="max-w-6xl w-full max-h-[90vh] overflow-y-auto">
+            <div className={`${darkMode ? 'bg-gray-900' : 'bg-white'} rounded-2xl shadow-2xl`}>
+              <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+                <h2 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                  🏦 Real Banking Integration
+                </h2>
+                <button
+                  onClick={() => setActiveView('dashboard')}
+                  className={`p-2 rounded-lg ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-100'}`}
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <div className="p-0">
+                <RealBanking 
+                  user={user}
+                  token={localStorage.getItem('token')}
+                  darkMode={darkMode}
+                  onAccountLinked={(accounts) => {
+                    setLinkedAccounts(accounts);
+                    // Refresh dashboard data after linking accounts
+                    fetchDashboardData();
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
