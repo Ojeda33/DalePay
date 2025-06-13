@@ -39,6 +39,13 @@ except ImportError as e:
     # Define fallback classes
     RealTransferRequest = None
 
+try:
+    from dalepay_wallet import get_dalepay_wallet_service
+    MOOV_WALLET_AVAILABLE = True
+except ImportError as e:
+    print(f"Moov wallet not available: {e}")
+    MOOV_WALLET_AVAILABLE = False
+
 # Production Configuration
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
