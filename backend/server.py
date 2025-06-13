@@ -25,6 +25,9 @@ import base64
 from passlib.context import CryptContext
 from passlib.hash import bcrypt
 
+# Import real banking integration
+from real_banking import get_real_banking_service, TransferRequest as RealTransferRequest
+
 # Production Configuration
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
