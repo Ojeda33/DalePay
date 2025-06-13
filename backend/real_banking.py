@@ -145,8 +145,11 @@ class RealBankingService:
     
     async def create_link_token(self, user_id: str) -> str:
         """Create Plaid Link token for account linking"""
-        if not self.config.plaid_client:
-            raise HTTPException(status_code=500, detail="Banking service not available. Please configure Plaid credentials.")
+        if not PLAID_AVAILABLE or not self.config.plaid_client:
+            raise HTTPException(
+                status_code=501, 
+                detail="Real banking service not configured. Please set up Plaid API credentials in environment variables (PLAID_CLIENT_ID, PLAID_SECRET)."
+            )
         
         try:
             request = LinkTokenCreateRequest(
