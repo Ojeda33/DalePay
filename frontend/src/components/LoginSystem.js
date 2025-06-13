@@ -48,7 +48,7 @@ const LoginSystem = ({ onLogin, darkMode }) => {
       if (response.data.requires_mfa) {
         setShowMFA(true);
       } else {
-        onLogin(response.data.user, response.data.access_token);
+        onLogin(response.data.user || response.data, response.data.access_token);
       }
     } catch (error) {
       setError(error.response?.data?.detail || 'Login failed. Please check your credentials.');
