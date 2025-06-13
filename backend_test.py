@@ -191,6 +191,47 @@ class DalePayAPITester:
         if success and 'transactions' in response:
             print(f"Found {len(response['transactions'])} transactions")
         return success, response
+        
+    # Real Banking API Tests
+    def create_banking_link_token(self):
+        """Test creating a Plaid link token"""
+        success, response = self.run_test(
+            "Create Banking Link Token",
+            "POST",
+            "api/banking/create-link-token",
+            501  # Expecting 501 Not Implemented since Plaid credentials aren't configured
+        )
+        return success, response
+        
+    def get_real_bank_accounts(self):
+        """Test getting real bank accounts"""
+        success, response = self.run_test(
+            "Get Real Bank Accounts",
+            "GET",
+            "api/banking/accounts",
+            501  # Expecting 501 Not Implemented since Plaid credentials aren't configured
+        )
+        return success, response
+        
+    def get_total_real_balance(self):
+        """Test getting total balance across all linked bank accounts"""
+        success, response = self.run_test(
+            "Get Total Real Balance",
+            "GET",
+            "api/banking/total-balance",
+            501  # Expecting 501 Not Implemented since Plaid credentials aren't configured
+        )
+        return success, response
+        
+    def get_real_transactions(self):
+        """Test getting real transaction history"""
+        success, response = self.run_test(
+            "Get Real Transactions",
+            "GET",
+            "api/banking/transactions",
+            501  # Expecting 501 Not Implemented since Plaid credentials aren't configured
+        )
+        return success, response
 
 def run_tests():
     # Get the backend URL from environment
