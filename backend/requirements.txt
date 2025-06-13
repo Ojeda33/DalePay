@@ -23,7 +23,7 @@ requests==2.31.0
 requests-oauthlib==2.0.0
 
 # Real Banking Integration - Moov Financial
-moov==1.1.0
+moovio_sdk==1.0.0
 
 # Data Validation & Serialization
 pydantic[email]==2.6.4
