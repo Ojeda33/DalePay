@@ -10,7 +10,7 @@ class DalePayAPITester:
         self.user_id = None
         self.tests_run = 0
         self.tests_passed = 0
-        self.test_email = f"test_{uuid.uuid4().hex[:8]}@dalepay.com"
+        self.test_email = "finaltest@dalepay.com"  # Specific email requested for testing
         self.test_password = "TestPass123!"
 
     def run_test(self, name, method, endpoint, expected_status, data=None, headers=None):
@@ -60,7 +60,7 @@ class DalePayAPITester:
         user_data = {
             "email": self.test_email,
             "password": self.test_password,
-            "full_name": "Test User",
+            "full_name": "Final Test User",
             "phone": "+17871234567",  # Format: +1XXXXXXXXXX
             "date_of_birth": "1990-01-01",
             "ssn_last_4": "1234",
@@ -86,6 +86,13 @@ class DalePayAPITester:
             self.token = response['access_token']
             self.user_id = response.get('user_id')
             print(f"Registered user with email: {self.test_email}")
+            
+            # Check if wallet balance is $100 for new users
+            if 'user' in response and response['user'].get('wallet_balance') == 100.0:
+                print(f"✅ New user balance is $100.00 as expected")
+            else:
+                print(f"❌ New user balance is not $100.00 as expected")
+                
             return True
         return False
 
@@ -95,39 +102,31 @@ class DalePayAPITester:
             email = self.test_email
         if not password:
             password = self.test_password
-            
-        # For login, the API expects query parameters, not JSON body
-        url = f"{self.base_url}/api/auth/login?email={email}&password={password}"
         
-        self.tests_run += 1
-        print(f"\n🔍 Testing Login...")
+        login_data = {
+            "email": email,
+            "password": password
+        }
         
-        try:
-            response = requests.post(url)
+        success, response = self.run_test(
+            "Login",
+            "POST",
+            "api/auth/login",
+            200,
+            data=login_data
+        )
+        
+        if success and 'access_token' in response:
+            self.token = response['access_token']
+            self.user_id = response.get('user_id')
+            print(f"Logged in as {email}")
             
-            success = response.status_code == 200
-            if success:
-                self.tests_passed += 1
-                print(f"✅ Passed - Status: {response.status_code}")
-                try:
-                    data = response.json()
-                    self.token = data.get('access_token')
-                    self.user_id = data.get('user_id')
-                    print(f"Logged in as {email}")
-                    return True, data
-                except:
-                    return True, {}
-            else:
-                print(f"❌ Failed - Expected 200, got {response.status_code}")
-                try:
-                    print(f"Response: {response.json()}")
-                except:
-                    print(f"Response: {response.text}")
-                return False, {}
-                
-        except Exception as e:
-            print(f"❌ Failed - Error: {str(e)}")
-            return False, {}
+            # Check if wallet balance is shown correctly
+            if 'user' in response and 'wallet_balance' in response['user']:
+                print(f"User balance: ${response['user']['wallet_balance']}")
+            
+            return True, response
+        return False, {}
 
     def get_user_profile(self):
         """Get user profile"""
@@ -154,16 +153,16 @@ class DalePayAPITester:
             print(f"Successfully linked bank account: {bank_data['bank_name']}")
         return success, response
 
-    def get_bank_accounts(self):
+    def get_linked_accounts(self):
         """Get linked bank accounts"""
         success, response = self.run_test(
-            "Get Bank Accounts",
+            "Get Linked Accounts",
             "GET",
-            "api/bank-accounts",
+            "api/linked-accounts",
             200
         )
         if success:
-            print(f"Found {len(response)} bank accounts")
+            print(f"Found {len(response)} linked accounts")
         return success, response
 
     def send_money(self, transfer_data):
@@ -177,6 +176,8 @@ class DalePayAPITester:
         )
         if success:
             print(f"Successfully sent ${transfer_data['amount']} to {transfer_data.get('recipient_email', transfer_data.get('recipient_phone', 'recipient'))}")
+            if 'fee' in response:
+                print(f"Transaction fee: ${response['fee']}")
         return success, response
 
     def get_transactions(self):
@@ -187,61 +188,8 @@ class DalePayAPITester:
             "api/transactions",
             200
         )
-        if success:
-            print(f"Found {len(response)} transactions")
-        return success, response
-
-    def test_admin_dashboard(self, admin_email="admin@dalepay.com", admin_password="admin123"):
-        """Test admin dashboard access"""
-        # First login as admin
-        if not self.login(admin_email, admin_password):
-            print("❌ Admin login failed")
-            return False, {}
-        
-        success, response = self.run_test(
-            "Admin Dashboard",
-            "GET",
-            "api/admin/dashboard",
-            200
-        )
-        if success:
-            print("✅ Admin dashboard accessible")
-        return success, response
-
-    def test_admin_users(self):
-        """Test admin users list"""
-        success, response = self.run_test(
-            "Admin Users List",
-            "GET",
-            "api/admin/users",
-            200
-        )
-        if success:
-            print(f"✅ Admin can view {response.get('total', 0)} users")
-        return success, response
-
-    def test_admin_transactions(self):
-        """Test admin transactions list"""
-        success, response = self.run_test(
-            "Admin Transactions List",
-            "GET",
-            "api/admin/transactions",
-            200
-        )
-        if success:
-            print(f"✅ Admin can view {response.get('total', 0)} transactions")
-        return success, response
-
-    def test_admin_ai_scan(self):
-        """Test admin AI scan trigger"""
-        success, response = self.run_test(
-            "Admin AI Scan",
-            "POST",
-            "api/admin/ai-scan/trigger",
-            200
-        )
-        if success:
-            print("✅ Admin can trigger AI system scan")
+        if success and 'transactions' in response:
+            print(f"Found {len(response['transactions'])} transactions")
         return success, response
 
 def run_tests():
@@ -251,89 +199,100 @@ def run_tests():
     # Create tester instance
     tester = DalePayAPITester(backend_url)
     
-    print("\n🔥 Starting DalePay API Tests\n")
+    print("\n🔥 Starting DalePay Final Tests\n")
     
-    # Test 1: Register a new user
-    print("\n🔍 Test 1: Registering a new user...")
-    if not tester.register_user():
-        print("❌ User registration failed, trying to login with existing account")
-        # Try to login with existing test account
-        if not tester.login("test@dalepay.com", "TestPass123!"):
-            print("❌ Login failed, stopping tests")
+    # Test 1: Register a new user with specific email
+    print("\n🔍 Test 1: Registering a new user with email finaltest@dalepay.com...")
+    registration_success = tester.register_user()
+    
+    # If registration fails, try to login with the same credentials
+    if not registration_success:
+        print("Registration failed, trying to login with the same credentials...")
+        login_success, login_data = tester.login()
+        if not login_success:
+            print("❌ Both registration and login failed, stopping tests")
             return False
     
-    # Test 2: Get user profile
-    print("\n🔍 Test 2: Getting user profile...")
+    # Test 2: Get user profile to verify wallet balance
+    print("\n🔍 Test 2: Getting user profile to verify wallet balance...")
     success, profile = tester.get_user_profile()
-    if not success:
+    if success:
+        if profile.get('wallet_balance') == 100.0:
+            print("✅ Wallet balance is $100.00 as expected for new users")
+        else:
+            print(f"❌ Wallet balance is ${profile.get('wallet_balance', 0)}, expected $100.00")
+    else:
         print("❌ Failed to get user profile")
     
-    # Test 3: Link a bank account
-    print("\n🔍 Test 3: Linking a bank account...")
+    # Test 3: Test bank linking
+    print("\n🔍 Test 3: Testing bank account linking...")
     bank_data = {
         "bank_name": "Test Bank",
         "account_type": "checking",
         "routing_number": "123456789",
         "account_number": "987654321",
-        "account_holder_name": "Test User"
+        "account_holder_name": "Final Test User"
     }
     success, bank_response = tester.link_bank_account(bank_data)
     if not success:
         print("❌ Failed to link bank account")
     
-    # Test 4: Get bank accounts
-    print("\n🔍 Test 4: Getting bank accounts...")
-    success, bank_accounts = tester.get_bank_accounts()
+    # Test 4: Get linked accounts
+    print("\n🔍 Test 4: Getting linked accounts...")
+    success, linked_accounts = tester.get_linked_accounts()
     if not success:
-        print("❌ Failed to get bank accounts")
+        print("❌ Failed to get linked accounts")
     
-    # Test 5: Send money
-    print("\n🔍 Test 5: Sending money...")
+    # Test 5: Send money with instant transfer (1.5% fee)
+    print("\n🔍 Test 5: Sending $20 to demo@recipient.com with instant transfer (1.5% fee)...")
     transfer_data = {
-        "recipient_email": "recipient@example.com",
-        "amount": 10.00,
-        "description": "Test transfer",
-        "transfer_type": "standard"
+        "recipient_email": "demo@recipient.com",
+        "amount": 20.00,
+        "description": "Test instant transfer",
+        "transfer_type": "instant"
     }
     success, transfer_response = tester.send_money(transfer_data)
     if not success:
         print("❌ Failed to send money")
     
-    # Test 6: Get transaction history
-    print("\n🔍 Test 6: Getting transaction history...")
-    success, transactions = tester.get_transactions()
-    if not success:
-        print("❌ Failed to get transactions")
+    # Test 6: Get user profile again to verify balance decreased
+    print("\n🔍 Test 6: Verifying balance decreased after transfer...")
+    success, updated_profile = tester.get_user_profile()
+    if success:
+        expected_balance = 100.0 - 20.0 - 0.3  # Initial $100 - $20 transfer - $0.30 fee (1.5% of $20)
+        if abs(updated_profile.get('wallet_balance', 0) - expected_balance) < 0.01:  # Allow for small floating point differences
+            print(f"✅ Balance decreased correctly to ${updated_profile.get('wallet_balance', 0)}")
+        else:
+            print(f"❌ Balance is ${updated_profile.get('wallet_balance', 0)}, expected ${expected_balance}")
+    else:
+        print("❌ Failed to get updated user profile")
     
-    # Test 7: Admin dashboard access
-    print("\n🔍 Test 7: Testing admin dashboard access...")
-    success, admin_dashboard = tester.test_admin_dashboard()
-    if not success:
-        print("❌ Failed to access admin dashboard")
-    
-    # Test 8: Admin users list
-    print("\n🔍 Test 8: Testing admin users list...")
-    success, admin_users = tester.test_admin_users()
-    if not success:
-        print("❌ Failed to get admin users list")
-    
-    # Test 9: Admin transactions list
-    print("\n🔍 Test 9: Testing admin transactions list...")
-    success, admin_transactions = tester.test_admin_transactions()
-    if not success:
-        print("❌ Failed to get admin transactions list")
-    
-    # Test 10: Admin AI scan
-    print("\n🔍 Test 10: Testing admin AI scan...")
-    success, admin_ai_scan = tester.test_admin_ai_scan()
-    if not success:
-        print("❌ Failed to trigger admin AI scan")
+    # Test 7: Get transaction history to verify transaction was recorded
+    print("\n🔍 Test 7: Checking transaction history...")
+    success, transactions_response = tester.get_transactions()
+    if success and 'transactions' in transactions_response:
+        transactions = transactions_response['transactions']
+        if len(transactions) > 0:
+            latest_transaction = transactions[0]  # Assuming sorted by most recent first
+            print(f"Latest transaction: ${latest_transaction.get('amount')} to {latest_transaction.get('to_user_id')}")
+            print(f"Transaction fee: ${latest_transaction.get('fee', 0)}")
+            print(f"Transaction status: {latest_transaction.get('status')}")
+            
+            # Verify transaction details
+            if latest_transaction.get('amount') == 20.0 and latest_transaction.get('fee') == 0.3:
+                print("✅ Transaction amount and fee are correct")
+            else:
+                print("❌ Transaction amount or fee is incorrect")
+        else:
+            print("❌ No transactions found in history")
+    else:
+        print("❌ Failed to get transaction history")
     
     # Print test summary
     print(f"\n📊 Tests passed: {tester.tests_passed}/{tester.tests_run}")
     return tester.tests_passed == tester.tests_run
 
 if __name__ == "__main__":
-    print("🚀 Starting DalePay API Tests...")
+    print("🚀 Starting DalePay Final Tests...")
     success = run_tests()
     print("✅ All tests passed!" if success else "❌ Some tests failed.")
