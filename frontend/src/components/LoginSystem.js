@@ -82,7 +82,7 @@ const LoginSystem = ({ onLogin, darkMode }) => {
     }
 
     try {
-      const response = await axios.post('/auth/register', signUpForm);
+      const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/auth/register`, signUpForm);
       
       setSuccess('Account created successfully! Please log in with your credentials.');
       setIsSignUp(false);
