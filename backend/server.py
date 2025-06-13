@@ -684,18 +684,22 @@ async def login_user(login_data: dict):
 
 @api_router.get("/user/profile")
 async def get_user_profile(current_user: dict = Depends(get_current_user)):
-    """Get user profile with real wallet balance from Moov"""
+    """Get user profile with REAL wallet balance from Moov"""
     try:
-        # Get real wallet balance if available
+        # Get real wallet balance
         real_balance = 0.0
+        balance_source = "demo"
+        
         try:
             if MOOV_WALLET_AVAILABLE:
                 wallet_service = await get_dalepay_wallet_service()
                 real_balance = await wallet_service.get_wallet_balance(current_user["id"])
+                balance_source = "real_wallet" if real_balance > 0 else "demo"
         except Exception as e:
             logger.warning(f"Could not fetch real balance for user {current_user['id']}: {e}")
-            # Fall back to stored balance if wallet service is not available
-            real_balance = float(current_user.get("wallet_balance", 0.0))
+            # Fall back to stored balance
+            real_balance = float(current_user.get("wallet_balance", 100.0))
+            balance_source = "demo"
         
         # Update user's wallet balance with real balance
         if real_balance > 0:
@@ -717,7 +721,9 @@ async def get_user_profile(current_user: dict = Depends(get_current_user)):
             "monthly_limit": float(current_user.get("monthly_limit", 10000)),
             "created_at": current_user["created_at"],
             "last_login": current_user.get("last_login"),
-            "balance_source": "real_wallet" if real_balance > 0 else "demo"
+            "balance_source": balance_source,
+            "wallet_id": current_user.get("wallet_id"),
+            "moov_account_id": current_user.get("moov_account_id")
         }
         
     except Exception as e:
