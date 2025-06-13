@@ -663,21 +663,39 @@ async def login_user(login_data: dict):
 
 @api_router.get("/user/profile")
 async def get_user_profile(current_user: dict = Depends(get_current_user)):
-    """Get user profile with real wallet balance"""
+    """Get user profile with real wallet balance from linked bank accounts"""
     try:
+        # Get real bank balance if available
+        real_balance = 0.0
+        try:
+            real_banking = await get_real_banking()
+            real_balance = await real_banking.get_total_balance(current_user["id"])
+        except Exception as e:
+            logger.warning(f"Could not fetch real balance for user {current_user['id']}: {e}")
+            # Fall back to stored balance if real banking is not available
+            real_balance = float(current_user.get("wallet_balance", 0.0))
+        
+        # Update user's wallet balance with real balance
+        if real_balance > 0:
+            await db.users.update_one(
+                {"id": current_user["id"]},
+                {"$set": {"wallet_balance": real_balance, "last_balance_update": datetime.utcnow()}}
+            )
+        
         return {
             "user_id": current_user["id"],
             "email": current_user["email"],
             "full_name": current_user["full_name"],
             "phone": current_user["phone"],
-            "wallet_balance": float(current_user.get("wallet_balance", 100.0)),
+            "wallet_balance": real_balance,
             "account_status": current_user["account_status"],
             "kyc_status": current_user.get("kyc_status", "approved"),
             "subscription_plan": current_user.get("subscription_plan", "basic"),
             "daily_limit": float(current_user.get("daily_limit", 2500)),
             "monthly_limit": float(current_user.get("monthly_limit", 10000)),
             "created_at": current_user["created_at"],
-            "last_login": current_user.get("last_login")
+            "last_login": current_user.get("last_login"),
+            "balance_source": "real_banking" if real_balance > 0 else "demo"
         }
         
     except Exception as e:
