@@ -4,7 +4,8 @@ import SendMoney from './SendMoney';
 import ReceiveMoney from './ReceiveMoney';
 import TransactionHistory from './TransactionHistory';
 import BankLinking from './BankLinking';
-import RealBanking from './RealBanking';
+import DigitalWallet from './DigitalWallet';
+import { useTranslation } from '../hooks/useLanguage';
 
 const Dashboard = ({ user, onNavigate, darkMode }) => {
   const [activeView, setActiveView] = useState('dashboard');
