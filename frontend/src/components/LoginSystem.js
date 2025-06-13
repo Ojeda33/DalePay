@@ -89,7 +89,7 @@ const LoginSystem = ({ onLogin, darkMode }) => {
       
       // Auto-login after successful registration
       setTimeout(() => {
-        onLogin(response.data.user, response.data.access_token);
+        onLogin(response.data.user || response.data, response.data.access_token);
       }, 1000);
 
     } catch (error) {
