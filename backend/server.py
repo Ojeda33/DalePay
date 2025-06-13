@@ -100,9 +100,11 @@ class UserCreate(BaseModel):
 
     @validator('phone')
     def validate_phone(cls, v):
-        if not re.match(r'^\+?1?[2-9]\d{2}[2-9]\d{2}\d{4}$', v.replace('-', '').replace(' ', '')):
-            raise ValueError('Invalid phone number format')
-        return v
+        # More lenient phone validation for demo
+        cleaned = re.sub(r'[^\d]', '', v)
+        if len(cleaned) >= 10:
+            return v
+        raise ValueError('Invalid phone number format')
 
     @validator('ssn_last_4')
     def validate_ssn(cls, v):
