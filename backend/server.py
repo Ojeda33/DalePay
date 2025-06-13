@@ -538,8 +538,8 @@ async def register_user(user_data: UserCreate, background_tasks: BackgroundTasks
             "created_at": datetime.utcnow(),
             "last_login": None,
             "subscription_plan": "basic",  # basic, premium, business
-            "daily_limit": Decimal('2500.00'),
-            "monthly_limit": Decimal('10000.00'),
+            "daily_limit": float(Decimal('2500.00')),
+            "monthly_limit": float(Decimal('10000.00')),
             # Encrypted sensitive data
             "encrypted_ssn": encrypt_sensitive_data(user_data.ssn_last_4),
             "encrypted_address": encrypt_sensitive_data(json.dumps({
