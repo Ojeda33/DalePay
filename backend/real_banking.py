@@ -71,6 +71,11 @@ class RealBankingConfig:
     
     def setup_plaid_client(self):
         """Initialize Plaid API client"""
+        if not PLAID_AVAILABLE:
+            logger.warning("Plaid SDK not available. Real banking features will be limited.")
+            self.plaid_client = None
+            return
+            
         try:
             # Map environment string to Plaid environment
             env_map = {
