@@ -7,20 +7,28 @@ import BankLinking from './BankLinking';
 import DigitalWallet from './DigitalWallet';
 import { useTranslation } from '../hooks/useLanguage';
 
-const Dashboard = ({ user, onNavigate, darkMode, onToggleDarkMode }) => {
+const Dashboard = ({ user, onLogout, onNavigate, darkMode, onToggleDarkMode }) => {
   const [activeView, setActiveView] = useState('dashboard');
-  const [balance, setBalance] = useState(0);
-  const [realBalance, setRealBalance] = useState(0);
-  const [balanceSource, setBalanceSource] = useState('demo');
-  const [linkedAccounts, setLinkedAccounts] = useState([]);
-  const [transactions, setTransactions] = useState([]);
-  const [bankAccounts, setBankAccounts] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [balance, setBalance] = useState(100);
+  const [loading, setLoading] = useState(false);
+  const [notifications, setNotifications] = useState([
+    {
+      id: 1,
+      type: 'security',
+      message: 'Your account is secured with bank-level encryption',
+      time: new Date(),
+      read: false
+    },
+    {
+      id: 2,
+      type: 'success',
+      message: 'Welcome to DalePay! Your digital wallet is ready.',
+      time: new Date(),
+      read: false
+    }
+  ]);
+  const [showNotifications, setShowNotifications] = useState(false);
   const { t } = useTranslation();
-  const [accountLimits, setAccountLimits] = useState({
-    daily_remaining: 0,
-    monthly_remaining: 0
-  });
 
   useEffect(() => {
     fetchDashboardData();
