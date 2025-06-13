@@ -990,6 +990,11 @@ real_banking_service = None
 async def get_real_banking():
     """Get real banking service instance"""
     global real_banking_service
+    if not REAL_BANKING_AVAILABLE:
+        raise HTTPException(
+            status_code=501, 
+            detail="Real banking service not available. Please configure banking APIs."
+        )
     if real_banking_service is None:
         real_banking_service = get_real_banking_service(db)
     return real_banking_service
