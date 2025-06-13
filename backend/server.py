@@ -915,6 +915,42 @@ async def health_check():
 async def shutdown_db_client():
     client.close()
 
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8001)
+# Security Middleware for transaction validation
+class SecurityMiddleware:
+    @staticmethod
+    async def validate_transaction_limits(amount: float, user_id: str):
+        """Implement transaction limits and fraud detection"""
+        daily_limit = 10000.00  # $10,000 daily limit
+        
+        # Check daily transaction total
+        today = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+        daily_total_cursor = db.transactions.aggregate([
+            {
+                "$match": {
+                    "from_user_id": user_id,
+                    "created_at": {"$gte": today},
+                    "status": {"$in": ["completed", "pending"]}
+                }
+            },
+            {"$group": {"_id": None, "total": {"$sum": "$amount"}}}
+        ])
+        
+        daily_results = await daily_total_cursor.to_list(1)
+        current_total = daily_results[0]['total'] if daily_results else 0
+        
+        if current_total + amount > daily_limit:
+            raise HTTPException(
+                status_code=400, 
+                detail="Daily transaction limit exceeded"
+            )
+    
+    @staticmethod
+    async def log_security_event(event_type: str, user_id: str, details: dict):
+        """Log security events for compliance"""
+        security_log = {
+            "event_type": event_type,
+            "user_id": user_id,
+            "details": details,
+            "timestamp": datetime.utcnow()
+        }
+        await db.security_logs.insert_one(security_log)
