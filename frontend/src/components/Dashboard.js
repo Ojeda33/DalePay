@@ -7,7 +7,11 @@ import BankLinking from './BankLinking';
 import RealBanking from './RealBanking';
 
 const Dashboard = ({ user, onNavigate, darkMode }) => {
+  const [activeView, setActiveView] = useState('dashboard');
   const [balance, setBalance] = useState(0);
+  const [realBalance, setRealBalance] = useState(0);
+  const [balanceSource, setBalanceSource] = useState('demo');
+  const [linkedAccounts, setLinkedAccounts] = useState([]);
   const [transactions, setTransactions] = useState([]);
   const [bankAccounts, setBankAccounts] = useState([]);
   const [loading, setLoading] = useState(true);
