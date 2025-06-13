@@ -96,19 +96,38 @@ class DalePayAPITester:
         if not password:
             password = self.test_password
             
-        success, response = self.run_test(
-            "Login",
-            "POST",
-            "api/auth/login",
-            200,
-            data={"email": email, "password": password}
-        )
-        if success and 'access_token' in response:
-            self.token = response['access_token']
-            self.user_id = response.get('user_id')
-            print(f"Logged in as {email}")
-            return True
-        return False
+        # For login, the API expects query parameters, not JSON body
+        url = f"{self.base_url}/api/auth/login?email={email}&password={password}"
+        
+        self.tests_run += 1
+        print(f"\n🔍 Testing Login...")
+        
+        try:
+            response = requests.post(url)
+            
+            success = response.status_code == 200
+            if success:
+                self.tests_passed += 1
+                print(f"✅ Passed - Status: {response.status_code}")
+                try:
+                    data = response.json()
+                    self.token = data.get('access_token')
+                    self.user_id = data.get('user_id')
+                    print(f"Logged in as {email}")
+                    return True, data
+                except:
+                    return True, {}
+            else:
+                print(f"❌ Failed - Expected 200, got {response.status_code}")
+                try:
+                    print(f"Response: {response.json()}")
+                except:
+                    print(f"Response: {response.text}")
+                return False, {}
+                
+        except Exception as e:
+            print(f"❌ Failed - Error: {str(e)}")
+            return False, {}
 
     def get_user_profile(self):
         """Get user profile"""
